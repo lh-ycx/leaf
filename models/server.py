@@ -63,11 +63,11 @@ class Server:
             c.id: {BYTES_WRITTEN_KEY: 0,
                    BYTES_READ_KEY: 0,
                    LOCAL_COMPUTATIONS_KEY: 0} for c in clients}
-        for c in self.all_clients:
-            c.model.set_params(self.model)
+        # for c in self.all_clients:
+            # c.model.set_params(self.model)
         simulate_time = 0
         for c in clients:
-            # c.model.set_params(self.model)
+            c.model.set_params(self.model)
             try:
                 # set deadline 
                 c.set_deadline(deadline)
