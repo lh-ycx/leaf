@@ -1,6 +1,8 @@
 import json
 import time
 from datetime import datetime
+import random
+import pandas as pd
 
 
 class Timer:
@@ -9,20 +11,66 @@ class Timer:
         self.refer_time = '2018-03-06 00:00:00'
         self.refer_second = time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
         self.trace_start, self.trace_end = None, None
+        self.ready_time = []
         self.uid = uid
-        with open('../data/ready_{}.json'.format('strict' if google else 'loose'), 'r', encoding='utf-8') as f:
-            self.ready_time = json.load(f)  # uid -> [ready_start, ready_end]
-            self.ready_time = self.ready_time[uid]  # list([ready_start, ready_end])
-        with open('../data/uid2behavior_tiny.json', 'r', encoding='utf-8') as f:
-            self.process_message(json.load(f))
+        self.google = google
+        self.state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay',
+                      'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
 
-    def process_message(self, d):
-        message = d[self.uid]['messages']
-        state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay',
-                 'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
-        for s in state:
+        # get marched ubt from user_behavior_tiny by uid
+        d = pd.read_csv("../data/user_behavior_tiny.csv", encoding="utf-8")['extra']
+        for i in range(len(d)):
+            ubt = json.loads(d[i])
+            if ubt['user_id'] == self.uid:
+                self.ubt = ubt
+
+        # ### get ready time list ###
+        start_charge, end_charge, okay, low = None, None, None, None
+        message = self.ubt['messages']
+        ready_time = []
+        for s in self.state:
             message = message.replace(s, "\t" + s + "\n")
         message = message.replace('\x00', '').strip().split("\n")
+        # get ready time
+        for mes in message:
+            t, s = mes.strip().split("\t")
+            t = t.strip()
+            s = s.strip()
+            try:
+                if s == 'battery_charged_on' and not start_charge:
+                    start_charge = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                                   time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                elif s == 'battery_charged_off' and start_charge:
+                    end_charge = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                                 time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                    ready_time.append([start_charge, end_charge])
+                    start_charge, end_charge = None, None
+
+                if not self.google:
+                    if s == 'battery_okay' and not okay:
+                        okay = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                               time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                    elif s == 'battery_low' and okay:
+                        low = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                              time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                        ready_time.append([okay, low])
+                        okay, low = None, None
+            except:
+                pass
+        # merge ready time
+        try:
+            ready_time = sorted(ready_time, key=lambda x: x[0])
+            now = ready_time[0]
+            for a in ready_time:
+                if now[1] >= a[0]:
+                    now = [now[0], max(a[1], now[1])]
+                else:
+                    self.ready_time.append(now)
+                    now = a
+        except:
+            pass
+
+        # ### get trace start time and trace end time ###
         for mes in message:
             try:
                 t = mes.strip().split("\t")[0].strip()
