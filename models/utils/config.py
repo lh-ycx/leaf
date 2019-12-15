@@ -16,6 +16,7 @@ class Config():
         self.lr = 0.1
         self.eval_every = 3             # -1 for eval when quit
         self.clients_per_round = 10
+        self.min_selected = 10
         self.batch_size = 10
         self.seed = 0
         self.metrics_file = 'metrics'
@@ -30,6 +31,7 @@ class Config():
         self.big_speed = [150.0, 1.0]
         self.mid_speed = [100.0, 1.0]
         self.small_speed = [50.0, 1.0]
+        self.time_window = [20.0, 0.0]  # time window for selection stage
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -54,6 +56,8 @@ class Config():
                         self.eval_every = int(line[1])
                     elif line[0] == 'clients_per_round':
                         self.clients_per_round = int(line[1])
+                    elif line[0] == 'min_selected':
+                        self.min_selected = int(line[1])
                     elif line[0] == 'batch_size':
                         self.batch_size = int(line[1])
                     elif line[0] == 'seed':
@@ -84,6 +88,8 @@ class Config():
                         self.mid_speed = [float(line[1]), float(line[2])]
                     elif line[0] == 'small_speed':
                         self.small_speed = [float(line[1]), float(line[2])]
+                    elif line[0] == 'time_window':
+                        self.time_window = [float(line[1]), float(line[2])]
                 except Exception as e:
                     traceback.print_exc()
     

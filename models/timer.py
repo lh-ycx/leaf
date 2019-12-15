@@ -3,12 +3,17 @@ import time
 from datetime import datetime
 import random
 import pandas as pd
+from utils.logger import Logger
+
+L = Logger()
+logger = L.get_logger()
 
 
 class Timer:
     def __init__(self, uid, google=True):
+        self.isSuccess = False
         self.fmt = '%Y-%m-%d %H:%M:%S'
-        self.refer_time = '2018-03-06 00:00:00'
+        self.refer_time = '2018-03-06 08:00:00'
         self.refer_second = time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
         self.trace_start, self.trace_end = None, None
         self.ready_time = []
@@ -55,8 +60,10 @@ class Timer:
                               time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
                         ready_time.append([okay, low])
                         okay, low = None, None
-            except:
-                pass
+            except ValueError:
+                logger.debug('invalid trace for uid: {}'.format(self.uid))
+                return
+            
         # merge ready time
         try:
             ready_time = sorted(ready_time, key=lambda x: x[0])
@@ -67,8 +74,9 @@ class Timer:
                 else:
                     self.ready_time.append(now)
                     now = a
-        except:
-            pass
+        except (ValueError, IndexError):
+            logger.debug('invalid trace for uid: {}'.format(self.uid))
+            return
 
         # ### get trace start time and trace end time ###
         for mes in message:
@@ -78,8 +86,11 @@ class Timer:
                 if not self.trace_start:
                     self.trace_start = sec
                 self.trace_end = sec
-            except:
-                pass
+            except ValueError:
+                logger.debug('invalid trace for uid: {}'.format(self.uid))
+                return
+        
+        self.isSuccess = True
 
     def ready(self, round_start, time_window, reference=True):
         """
