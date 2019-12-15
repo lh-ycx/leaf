@@ -20,7 +20,7 @@ class Client:
         with open('../data/user_behavior_tiny.json', 'r', encoding='utf-8') as f:
             d = json.load(f)
             uid = random.randint(0, len(d))
-            self.timer = Timer(uid=d[str(uid)]['user_id'], google=True)
+            # self.timer = Timer(uid=d[str(uid)]['user_id'], google=True)
         self.group = group
         self.train_data = train_data
         self.eval_data = eval_data

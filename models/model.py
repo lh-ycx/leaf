@@ -10,13 +10,18 @@ from baseline_constants import ACCURACY_KEY
 
 from utils.model_utils import batch_data
 from utils.tf_utils import graph_size
+from utils.logger import Logger
+
+L = Logger()
+logger = L.get_logger()
 
 
 class Model(ABC):
 
-
+    init_cnt = 0
+    
     def __init__(self, seed, lr, optimizer=None, gpu_fraction=0.2):
-
+        
         self.lr = lr
         self._optimizer = optimizer
 
@@ -85,6 +90,9 @@ class Model(ABC):
             update: List of np.ndarray weights, with each weight array
                 corresponding to a variable in the resulting graph
         """
+        # logger.debug('--------------------')
+        # logger.debug('{}'.format(self.get_params()[-2:][0]))
+        
         for _ in range(num_epochs):
             self.run_epoch(data, batch_size)
 

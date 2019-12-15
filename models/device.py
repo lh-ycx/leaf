@@ -1,7 +1,7 @@
 # simulate device type
 # current classify as big/middle/small device
 # device can also be 
-from utils.logging import Logger
+from utils.logger import Logger
 import numpy as np
 
 # -1 - self define device, 0 - small, 1 - mid, 2 - big
