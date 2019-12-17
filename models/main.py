@@ -40,7 +40,7 @@ def main():
     logger = L.get_logger()
     
     # read config from file
-    cfg = Config()
+    cfg = Config('reddit.cfg')
 
     # Set the random seed if provided (affects client sampling, and batching)
     random.seed(1 + cfg.seed)
@@ -189,14 +189,15 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
     return clients
 
 
-def setup_clients(cfg, model=None):
+def setup_clients(cfg, model=None, use_val_set=False):
     """Instantiates clients based on given train and test data directories.
 
     Return:
         all_clients: list of Client objects.
     """
+    eval_set = 'test' if not use_val_set else 'val'
     train_data_dir = os.path.join('..', 'data', cfg.dataset, 'data', 'train')
-    test_data_dir = os.path.join('..', 'data', cfg.dataset, 'data', 'test')
+    test_data_dir = os.path.join('..', 'data', cfg.dataset, 'data', eval_set)
 
     users, groups, train_data, test_data = read_data(train_data_dir, test_data_dir)
 
