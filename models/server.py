@@ -111,7 +111,8 @@ class Server:
             for c in self.all_clients:
                 if c.id not in used_client_ids:
                     # c was not trained in this round
-                    params = c.model.get_params()
+                    # params = c.model.get_params()
+                    params = self.model
                     total_weight += c.num_train_samples  # assume that all train_data is used to update
                     for i, v in enumerate(params):
                         base[i] += (c.num_train_samples * v.astype(np.float64))

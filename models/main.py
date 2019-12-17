@@ -122,7 +122,7 @@ def main():
         # 1.1 select clients
         cur_time = server.get_cur_time()
         time_window = server.get_time_window() 
-        logger.info('current time: {}\t time window: {}'.format(cur_time, time_window))
+        logger.info('current time: {}\ttime window: {}\t'.format(cur_time, time_window))
         if not server.select_clients(i, 
                               online(clients, cur_time, time_window), 
                               num_clients=clients_per_round):
