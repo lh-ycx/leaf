@@ -10,24 +10,19 @@ logger = L.get_logger()
 
 
 class Timer:
-    def __init__(self, uid, google=True):
+    def __init__(self, ubt, google=True):
         self.isSuccess = False
         self.fmt = '%Y-%m-%d %H:%M:%S'
         self.refer_time = '2018-03-06 08:00:00'
         self.refer_second = time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
         self.trace_start, self.trace_end = None, None
         self.ready_time = []
-        self.uid = uid
         self.google = google
         self.state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay',
                       'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
 
         # get marched ubt from user_behavior_tiny by uid
-        d = pd.read_csv("../data/user_behavior_tiny.csv", encoding="utf-8")['extra']
-        for i in range(len(d)):
-            ubt = json.loads(d[i])
-            if ubt['user_id'] == self.uid:
-                self.ubt = ubt
+        self.ubt = ubt
 
         # ### get ready time list ###
         start_charge, end_charge, okay, low = None, None, None, None
@@ -61,9 +56,9 @@ class Timer:
                         ready_time.append([okay, low])
                         okay, low = None, None
             except ValueError:
-                logger.debug('invalid trace for uid: {}'.format(self.uid))
+                logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
                 return
-            
+
         # merge ready time
         try:
             ready_time = sorted(ready_time, key=lambda x: x[0])
@@ -75,7 +70,7 @@ class Timer:
                     self.ready_time.append(now)
                     now = a
         except (ValueError, IndexError):
-            logger.debug('invalid trace for uid: {}'.format(self.uid))
+            logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
             return
 
         # ### get trace start time and trace end time ###
@@ -87,9 +82,9 @@ class Timer:
                     self.trace_start = sec
                 self.trace_end = sec
             except ValueError:
-                logger.debug('invalid trace for uid: {}'.format(self.uid))
+                logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
                 return
-        
+
         self.isSuccess = True
 
     def ready(self, round_start, time_window, reference=True):

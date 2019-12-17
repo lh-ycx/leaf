@@ -35,10 +35,10 @@ class Client:
         # timer
         d = Client.d
         uid = random.randint(0, len(d))
-        self.timer = Timer(uid=d[str(uid)]['user_id'], google=True)
+        self.timer = Timer(ubt=d[str(uid)], google=True)
         while self.timer.isSuccess != True:
             uid = random.randint(0, len(d))
-            self.timer = Timer(uid=d[str(uid)]['user_id'], google=True)
+            self.timer = Timer(ubt=d[str(uid)], google=True)
         
         '''
         # old implementation - every round with the same speed/upload time
