@@ -51,7 +51,7 @@ def plot_charge(file):
         plt.xlabel("relative time")
         plt.ylabel("client id")
         plt.title("charged time")
-        plt.savefig(os.path.join(img_dir, "relativeTime_clientID_{}.png".format(i+1)), format="png")
+        plt.savefig(os.path.join(img_dir, "relativeTime_clientID_{}.png".format(i + 1)), format="png")
     # plt.show()
 
 
@@ -128,10 +128,36 @@ def uid2behavior_tiny():
         data[value['user_id']] = value
     with open('../../data/uid2behavior_tiny.json', 'w', encoding='utf-8') as f:
         json.dump(data, f)
-        
-        
+
+
+def plot_ready(google=True):
+    img_dir = "../../data/img"
+    with open("../../data/ready_{}.json".format("strict" if google else "loose"), "r", encoding="utf-8") as f:
+        ready = json.load(f)
+    client_cnt = []
+    tmin, tmax = 0, 0
+    for uid, ready_list in ready.items():
+        for start, end in ready_list:
+            if start > 0:
+                tmin = min(tmin, start / 60)
+                tmax = max(tmax, end / 60)
+                client_cnt.extend(list(range(int(start / 60), int((end + 30) / 60))))
+            elif end>0:
+                tmax = max(tmax, end / 60)
+                client_cnt.extend(list(range(0, int((end + 30) / 60))))
+    plt.hist(client_cnt, bins=int(tmax - tmin), color="blue")
+    plt.axis([0, 4500, 0, 1600])
+    plt.xlabel("relative time / min")
+    plt.ylabel("client num")
+    plt.title("relativeTime_clientNumber_{}.png".format("strict" if google else "loose"))
+    plt.savefig(os.path.join(img_dir, "relativeTime_clientNumber_{}.png".format("strict" if google else "loose")), format="png")
+    # plt.show()
+
+
 if __name__ == '__main__':
     # plot_charge("../../data/user_behavior_tiny.json")
     # static_ready("../../data/user_behavior_tiny.json", True)
     # static_ready("../../data/user_behavior_tiny.json", False)
-    uid2behavior_tiny()
+    # uid2behavior_tiny()
+    plot_ready(True)
+    plot_ready(False)
