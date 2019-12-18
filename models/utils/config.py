@@ -10,7 +10,7 @@ DEFAULT_CONFIG_FILE = 'default.cfg'
 # configuration for FedAvg
 class Config():
     def __init__(self, config_file = 'default.cfg'):
-        self.dataset = 'shakespeare'
+        self.dataset = 'reddit'
         self.model = 'stacked_lstm'
         self.num_rounds = -1            # -1 for unlimited
         self.lr = 0.1

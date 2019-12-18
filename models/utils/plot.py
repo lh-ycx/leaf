@@ -65,12 +65,12 @@ def gen_json():
         json.dump(d, f, indent=4)
 
 
-def static_ready(file, google=True):
+def static_ready(google=True):
     fmt = '%Y-%m-%d %H:%M:%S'
     reference_time = "2018-03-06 00:00:00"
     state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay',
              'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
-    with open(file, "r", encoding="utf-8") as f:
+    with open("../../data/user_behavior_tiny.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     ready = defaultdict(list)
     for i in data:
@@ -112,6 +112,7 @@ def static_ready(file, google=True):
                 else:
                     ready[uid].append(now)
                     now = a
+            ready[uid].append(now)
         except:
             if len(ready[uid]) == 0:
                 ready[uid] = []
@@ -130,34 +131,77 @@ def uid2behavior_tiny():
         json.dump(data, f)
 
 
-def plot_ready(google=True):
+def plot_ready(extend=False, google=True):
     img_dir = "../../data/img"
-    with open("../../data/ready_{}.json".format("strict" if google else "loose"), "r", encoding="utf-8") as f:
+    with open("../../data/ready{}_{}.json".format("_extend" if extend else "", "strict" if google else "loose"), "r", encoding="utf-8") as f:
         ready = json.load(f)
     client_cnt = []
     tmin, tmax = 0, 0
+    static_section = 3 * 60
+    min_section = 2 * 60
     for uid, ready_list in ready.items():
         for start, end in ready_list:
             if start > 0:
-                tmin = min(tmin, start / 60)
-                tmax = max(tmax, end / 60)
-                client_cnt.extend(list(range(int(start / 60), int((end + 30) / 60))))
-            elif end>0:
-                tmax = max(tmax, end / 60)
-                client_cnt.extend(list(range(0, int((end + 30) / 60))))
+                tmin = min(tmin, start / static_section)
+                tmax = max(tmax, end / static_section)
+                client_cnt.extend(list(range(int(start / static_section), int((end + (static_section - min_section)) / static_section))))
+            elif end > 0:
+                tmax = max(tmax, end / static_section)
+                client_cnt.extend(list(range(0, int((end + (static_section - min_section)) / static_section))))
     plt.hist(client_cnt, bins=int(tmax - tmin), color="blue")
-    plt.axis([0, 4500, 0, 1600])
-    plt.xlabel("relative time / min")
+    if not extend:
+        plt.axis([0, int(4500 * 60 / static_section), 0, 1600])
+    else:
+        plt.axis([0, 7000, 0, 2000])
+    plt.xlabel("relative time / {} min".format(int(static_section / 60)))
     plt.ylabel("client num")
     plt.title("relativeTime_clientNumber_{}.png".format("strict" if google else "loose"))
-    plt.savefig(os.path.join(img_dir, "relativeTime_clientNumber_{}.png".format("strict" if google else "loose")), format="png")
+    plt.savefig(os.path.join(img_dir, "relativeTime_clientNumber{}_{}.png".
+                             format("_extend" if extend else "", "strict" if google else "loose")), format="png")
     # plt.show()
 
 
+def static_ready_extend(google=True):
+    # if extend trace feature is okay
+    fmt = '%Y-%m-%d %H:%M:%S'
+    reference_time = "2018-03-06 00:00:00"
+    refer_second = time.mktime(datetime.strptime(reference_time, fmt).timetuple())
+    state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay',
+             'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
+    with open("../../data/user_behavior_tiny.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    with open("../../data/ready_{}.json".format("strict" if google else "loose"), "r", encoding="utf-8") as f:
+        ready = json.load(f)
+    ready_extend = defaultdict(list)
+
+    for i in data:
+        message = data[i]['messages']
+        uid = data[i]['user_id']
+        for s in state:
+            message = message.replace(s, "\t" + s + "\n")
+        message = message.replace('\x00', '').strip().split("\n")
+        trace_start, trace_end = None, None
+        for mes in message:
+            t = mes.strip().split("\t")[0].strip()
+            try:
+                if not trace_start:
+                    trace_start = time.mktime(datetime.strptime(t, fmt).timetuple()) - refer_second
+                trace_end = time.mktime(datetime.strptime(t, fmt).timetuple()) - refer_second
+            except:
+                pass
+
+        if not trace_start or not trace_end:
+            continue
+        T = trace_end - trace_start
+        for p in range(10):
+            ready_extend[uid].extend(list(map(lambda x: [x[0] + p * T, x[1] + p * T], ready[uid])))
+
+    with open("../../data/ready_extend_{}.json".format("strict" if google else "loose"), "w", encoding="utf-8") as f:
+        json.dump(ready_extend, f, indent=4)
+
+
 if __name__ == '__main__':
-    # plot_charge("../../data/user_behavior_tiny.json")
-    # static_ready("../../data/user_behavior_tiny.json", True)
-    # static_ready("../../data/user_behavior_tiny.json", False)
-    # uid2behavior_tiny()
-    plot_ready(True)
-    plot_ready(False)
+    static_ready_extend(True)
+    static_ready_extend(False)
+    plot_ready(True, True)
+    plot_ready(True, False)
