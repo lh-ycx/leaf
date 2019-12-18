@@ -174,8 +174,11 @@ class ClientModel(Model):
         fetches = {
             'cost': self.cost,
             'final_state': self.final_state,
+            'eval_metric_ops': self.eval_metric_ops
         }
-
+        nbatch = 0
+        tot_correct = 0
+        tot_loss = 0
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
 
             feed_dict = {
@@ -195,8 +198,11 @@ class ClientModel(Model):
 
             with self.graph.as_default():
                 _, vals = self.sess.run([self.train_op, fetches], feed_dict=feed_dict)
-
+            nbatch += 1
+            tot_correct += float(vals['eval_metric_ops'])
+            tot_loss += float(vals['cost'])
             state = vals['final_state']
+        return tot_correct / (nbatch * batch_size), tot_loss / nbatch
 
     def test(self, data, batch_size=5):
         tot_acc, tot_samples = 0, 0

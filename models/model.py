@@ -17,11 +17,10 @@ logger = L.get_logger()
 
 
 class Model(ABC):
-
     init_cnt = 0
-    
+
     def __init__(self, seed, lr, optimizer=None, gpu_fraction=0.2):
-        
+
         self.lr = lr
         self._optimizer = optimizer
 
@@ -30,7 +29,7 @@ class Model(ABC):
             tf.set_random_seed(123 + seed)
             self.features, self.labels, self.train_op, self.eval_metric_ops, self.loss = self.create_model()
             self.saver = tf.train.Saver()
-        config=tf.ConfigProto(log_device_placement=False)
+        config = tf.ConfigProto(log_device_placement=False)
         # config.gpu_options.per_process_gpu_memory_fraction = gpu_fraction
         self.sess = tf.Session(graph=self.graph, config=config)
 
@@ -92,26 +91,35 @@ class Model(ABC):
         """
         # logger.debug('--------------------')
         # logger.debug('{}'.format(self.get_params()[-2:][0]))
-        
-        for _ in range(num_epochs):
-            self.run_epoch(data, batch_size)
-
+        tot_acc, tot_loss = 0, 0
+        for i in range(num_epochs):
+            acc, loss = self.run_epoch(data, batch_size)
+            tot_acc += acc
+            tot_loss += loss
+            logger.info("epoch[{}/{}]: accuracy = {}, loss = {}".format(i + 1, num_epochs, acc, loss))
+        logger.info("end of {} epochs, accuracy = {}, loss = {}".format(num_epochs, tot_acc / num_epochs, tot_loss / num_epochs))
         update = self.get_params()
-        comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
+        comp = num_epochs * (len(data['y']) // batch_size) * batch_size * self.flops
         return comp, update
 
     def run_epoch(self, data, batch_size):
+        nbatch = 0
+        tot_correct = 0
+        tot_loss = 0
         for batched_x, batched_y in batch_data(data, batch_size):
-            
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-            
+            nbatch += 1
             with self.graph.as_default():
-                self.sess.run(self.train_op,
-                    feed_dict={
-                        self.features: input_data,
-                        self.labels: target_data
-                    })
+                _, correct, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
+                                                 feed_dict={
+                                                     self.features: input_data,
+                                                     self.labels: target_data
+                                                 })
+                tot_correct += float(correct)
+                tot_loss += float(loss)
+
+        return tot_correct / (nbatch * batch_size), tot_loss / nbatch
 
     def test(self, data):
         """

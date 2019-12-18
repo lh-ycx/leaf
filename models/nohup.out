@@ -10068,3 +10068,393 @@ _TFProfRoot (--/27.89m flops)
 2019-12-18 12:10:34,938 - FL-type - INFO - --------------------- test result ---------------------
 2019-12-18 12:13:49,561 - FL-type - INFO - train_accuracy: 0.0180989, 10th percentile: 0, 50th percentile: 0.0165485, 90th percentile 0.0274474
 2019-12-18 12:13:49,563 - FL-type - INFO - train_loss: 9.06067, 10th percentile: 8.6234, 50th percentile: 9.11054, 90th percentile 9.132
+2019-12-18 12:17:16,079 - FL-type - INFO - test_accuracy: 0.0180183, 10th percentile: 0, 50th percentile: 0.0166667, 90th percentile 0.0279642
+2019-12-18 12:17:16,080 - FL-type - INFO - test_loss: 9.06789, 10th percentile: 8.6665, 50th percentile: 9.1109, 90th percentile 9.13133
+2019-12-18 12:17:20,396 - FL-type - INFO - ===================== Round 178 of 9223372036854775807 =====================
+2019-12-18 12:17:20,396 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:17:20,397 - FL-type - INFO - current time: 6751.854237202245	time window: 20.0	
+2019-12-18 12:17:20,398 - FL-type - INFO - 79 of 813 clients online
+2019-12-18 12:17:20,399 - FL-type - INFO - selected client_ids: ['80453', '58213', '2043', '36037', '81372', '728', '7923', '69563', '34503', '3107', '11161', '64495', '65466', '41573', '9645', '47590', '19526', '62167', '8692', '9963']
+2019-12-18 12:17:20,399 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:17:20,399 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:17:20,414 - FL-type - INFO - client 80453 available time:180.0
+2019-12-18 12:17:20,886 - FL-type - INFO - client 80453 upload successfully!
+2019-12-18 12:17:20,900 - FL-type - INFO - client 58213 available time:180.0
+2019-12-18 12:17:20,928 - FL-type - INFO - client 58213 upload successfully!
+2019-12-18 12:17:20,943 - FL-type - INFO - client 2043 available time:180.0
+2019-12-18 12:17:22,661 - FL-type - INFO - client 2043 upload successfully!
+2019-12-18 12:17:22,675 - FL-type - INFO - client 36037 available time:178.0
+2019-12-18 12:17:22,706 - FL-type - INFO - client 36037 upload successfully!
+2019-12-18 12:17:22,721 - FL-type - INFO - client 81372 available time:180.0
+2019-12-18 12:17:22,770 - FL-type - INFO - client 81372 upload successfully!
+2019-12-18 12:17:22,784 - FL-type - INFO - client 728 available time:180.0
+2019-12-18 12:17:23,061 - FL-type - INFO - client 728 upload successfully!
+2019-12-18 12:17:23,075 - FL-type - INFO - client 7923 available time:180.0
+2019-12-18 12:17:23,102 - FL-type - INFO - client 7923 upload successfully!
+2019-12-18 12:17:23,116 - FL-type - INFO - client 69563 available time:180.0
+2019-12-18 12:17:23,232 - FL-type - INFO - client 69563 upload successfully!
+2019-12-18 12:17:23,246 - FL-type - INFO - client 34503 available time:180.0
+2019-12-18 12:17:23,298 - FL-type - INFO - client 34503 upload successfully!
+2019-12-18 12:17:23,312 - FL-type - INFO - client 3107 available time:180.0
+2019-12-18 12:17:23,496 - FL-type - INFO - client 3107 upload successfully!
+2019-12-18 12:17:23,510 - FL-type - INFO - client 11161 available time:180.0
+2019-12-18 12:17:23,648 - FL-type - INFO - client 11161 upload successfully!
+2019-12-18 12:17:23,662 - FL-type - INFO - client 64495 available time:180.0
+2019-12-18 12:17:23,690 - FL-type - INFO - client 64495 upload successfully!
+2019-12-18 12:17:23,704 - FL-type - INFO - client 65466 available time:179.0
+2019-12-18 12:17:23,731 - FL-type - INFO - client 65466 upload successfully!
+2019-12-18 12:17:23,745 - FL-type - INFO - client 41573 available time:180.0
+2019-12-18 12:17:23,883 - FL-type - INFO - client 41573 upload successfully!
+2019-12-18 12:17:23,897 - FL-type - INFO - client 9645 available time:180.0
+2019-12-18 12:17:23,925 - FL-type - INFO - client 9645 upload successfully!
+2019-12-18 12:17:23,939 - FL-type - INFO - client 47590 available time:180.0
+2019-12-18 12:17:23,989 - FL-type - INFO - client 47590 upload successfully!
+2019-12-18 12:17:24,003 - FL-type - INFO - client 19526 available time:180.0
+2019-12-18 12:17:24,033 - FL-type - INFO - client 19526 upload successfully!
+2019-12-18 12:17:24,047 - FL-type - INFO - client 62167 available time:180.0
+2019-12-18 12:17:24,073 - FL-type - INFO - client 62167 upload successfully!
+2019-12-18 12:17:24,087 - FL-type - INFO - client 8692 available time:180.0
+2019-12-18 12:17:24,114 - FL-type - INFO - client 8692 upload successfully!
+2019-12-18 12:17:24,128 - FL-type - INFO - client 9963 available time:180.0
+2019-12-18 12:17:24,202 - FL-type - INFO - client 9963 upload successfully!
+2019-12-18 12:17:24,202 - FL-type - INFO - configuration and update stage simulation time: 16.142857142857142
+2019-12-18 12:17:24,311 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:17:24,312 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:17:24,312 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:17:39,076 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:20:46,333 - FL-type - INFO - train_accuracy: 0.0177305, 10th percentile: 0.00335126, 50th percentile: 0.0168919, 90th percentile 0.027027
+2019-12-18 12:20:46,335 - FL-type - INFO - train_loss: 9.06379, 10th percentile: 8.7045, 50th percentile: 9.1091, 90th percentile 9.13063
+2019-12-18 12:24:13,386 - FL-type - INFO - test_accuracy: 0.0176726, 10th percentile: 0, 50th percentile: 0.015528, 90th percentile 0.0266525
+2019-12-18 12:24:13,387 - FL-type - INFO - test_loss: 9.0653, 10th percentile: 8.67484, 50th percentile: 9.10865, 90th percentile 9.12968
+2019-12-18 12:24:17,711 - FL-type - INFO - ===================== Round 179 of 9223372036854775807 =====================
+2019-12-18 12:24:17,712 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:24:17,712 - FL-type - INFO - current time: 6787.997094345102	time window: 20.0	
+2019-12-18 12:24:17,713 - FL-type - INFO - 81 of 813 clients online
+2019-12-18 12:24:17,714 - FL-type - INFO - selected client_ids: ['50799', '22553', '77911', '9645', '1497', '38540', '44747', '10902', '72108', '54374', '69127', '71031', '72759', '36037', '80453', '23560', '70497', '53611', '16531', '57926']
+2019-12-18 12:24:17,714 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:24:17,714 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:24:17,730 - FL-type - INFO - client 50799 available time:180.0
+2019-12-18 12:24:17,764 - FL-type - INFO - client 50799 upload successfully!
+2019-12-18 12:24:17,779 - FL-type - INFO - client 22553 available time:180.0
+2019-12-18 12:24:17,874 - FL-type - INFO - client 22553 upload successfully!
+2019-12-18 12:24:17,889 - FL-type - INFO - client 77911 available time:180.0
+2019-12-18 12:24:17,948 - FL-type - INFO - client 77911 upload successfully!
+2019-12-18 12:24:17,964 - FL-type - INFO - client 9645 available time:180.0
+2019-12-18 12:24:17,997 - FL-type - INFO - client 9645 upload successfully!
+2019-12-18 12:24:18,012 - FL-type - INFO - client 1497 available time:180.0
+2019-12-18 12:24:18,258 - FL-type - INFO - client 1497 upload successfully!
+2019-12-18 12:24:18,273 - FL-type - INFO - client 38540 available time:180.0
+2019-12-18 12:24:18,377 - FL-type - INFO - client 38540 upload successfully!
+2019-12-18 12:24:18,391 - FL-type - INFO - client 44747 available time:180.0
+2019-12-18 12:24:18,595 - FL-type - INFO - client 44747 upload successfully!
+2019-12-18 12:24:18,609 - FL-type - INFO - client 10902 available time:180.0
+2019-12-18 12:24:18,637 - FL-type - INFO - client 10902 upload successfully!
+2019-12-18 12:24:18,651 - FL-type - INFO - client 72108 available time:180.0
+2019-12-18 12:24:18,680 - FL-type - INFO - client 72108 upload successfully!
+2019-12-18 12:24:18,693 - FL-type - INFO - client 54374 available time:180.0
+2019-12-18 12:24:18,816 - FL-type - INFO - client 54374 upload successfully!
+2019-12-18 12:24:18,830 - FL-type - INFO - client 69127 available time:180.0
+2019-12-18 12:24:18,882 - FL-type - INFO - client 69127 upload successfully!
+2019-12-18 12:24:18,896 - FL-type - INFO - client 71031 available time:180.0
+2019-12-18 12:24:18,924 - FL-type - INFO - client 71031 upload successfully!
+2019-12-18 12:24:18,938 - FL-type - INFO - client 72759 available time:180.0
+2019-12-18 12:24:18,967 - FL-type - INFO - client 72759 upload successfully!
+2019-12-18 12:24:18,981 - FL-type - INFO - client 36037 available time:178.0
+2019-12-18 12:24:19,009 - FL-type - INFO - client 36037 upload successfully!
+2019-12-18 12:24:19,023 - FL-type - INFO - client 80453 available time:180.0
+2019-12-18 12:24:19,456 - FL-type - INFO - client 80453 upload successfully!
+2019-12-18 12:24:19,470 - FL-type - INFO - client 23560 available time:180.0
+2019-12-18 12:24:19,522 - FL-type - INFO - client 23560 upload successfully!
+2019-12-18 12:24:19,536 - FL-type - INFO - client 70497 available time:180.0
+2019-12-18 12:24:19,634 - FL-type - INFO - client 70497 upload successfully!
+2019-12-18 12:24:19,648 - FL-type - INFO - client 53611 available time:179.0
+2019-12-18 12:24:19,745 - FL-type - INFO - client 53611 upload successfully!
+2019-12-18 12:24:19,760 - FL-type - INFO - client 16531 available time:180.0
+2019-12-18 12:24:19,788 - FL-type - INFO - client 16531 upload successfully!
+2019-12-18 12:24:19,802 - FL-type - INFO - client 57926 available time:180.0
+2019-12-18 12:24:19,947 - FL-type - INFO - client 57926 upload successfully!
+2019-12-18 12:24:19,947 - FL-type - INFO - configuration and update stage simulation time: 16.183673469387756
+2019-12-18 12:24:20,055 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:24:20,056 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:24:20,056 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:24:34,892 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:27:46,024 - FL-type - INFO - train_accuracy: 0.0173631, 10th percentile: 0, 50th percentile: 0.0159453, 90th percentile 0.026522
+2019-12-18 12:27:46,026 - FL-type - INFO - train_loss: 9.06272, 10th percentile: 8.67279, 50th percentile: 9.10786, 90th percentile 9.12899
+2019-12-18 12:31:08,923 - FL-type - INFO - test_accuracy: 0.0174686, 10th percentile: 0, 50th percentile: 0.015625, 90th percentile 0.0266667
+2019-12-18 12:31:08,924 - FL-type - INFO - test_loss: 9.06323, 10th percentile: 8.68664, 50th percentile: 9.10789, 90th percentile 9.12883
+2019-12-18 12:31:13,277 - FL-type - INFO - ===================== Round 180 of 9223372036854775807 =====================
+2019-12-18 12:31:13,278 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:31:13,278 - FL-type - INFO - current time: 6824.18076781449	time window: 20.0	
+2019-12-18 12:31:13,279 - FL-type - INFO - 81 of 813 clients online
+2019-12-18 12:31:13,280 - FL-type - INFO - selected client_ids: ['38540', '50799', '9645', '32599', '71031', '65469', '31396', '81372', '79656', '65466', '72759', '1204', '57926', '44747', '29708', '47590', '60366', '16986', '19526', '23560']
+2019-12-18 12:31:13,280 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:31:13,280 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:31:13,294 - FL-type - INFO - client 38540 available time:180.0
+2019-12-18 12:31:13,406 - FL-type - INFO - client 38540 upload successfully!
+2019-12-18 12:31:13,420 - FL-type - INFO - client 50799 available time:180.0
+2019-12-18 12:31:13,453 - FL-type - INFO - client 50799 upload successfully!
+2019-12-18 12:31:13,467 - FL-type - INFO - client 9645 available time:180.0
+2019-12-18 12:31:13,501 - FL-type - INFO - client 9645 upload successfully!
+2019-12-18 12:31:13,516 - FL-type - INFO - client 32599 available time:180.0
+2019-12-18 12:31:13,547 - FL-type - INFO - client 32599 upload successfully!
+2019-12-18 12:31:13,562 - FL-type - INFO - client 71031 available time:180.0
+2019-12-18 12:31:13,593 - FL-type - INFO - client 71031 upload successfully!
+2019-12-18 12:31:13,608 - FL-type - INFO - client 65469 available time:180.0
+2019-12-18 12:31:13,666 - FL-type - INFO - client 65469 upload successfully!
+2019-12-18 12:31:13,680 - FL-type - INFO - client 31396 available time:180.0
+2019-12-18 12:31:13,738 - FL-type - INFO - client 31396 upload successfully!
+2019-12-18 12:31:13,752 - FL-type - INFO - client 81372 available time:180.0
+2019-12-18 12:31:13,809 - FL-type - INFO - client 81372 upload successfully!
+2019-12-18 12:31:13,826 - FL-type - INFO - client 79656 available time:180.0
+2019-12-18 12:31:13,907 - FL-type - INFO - client 79656 upload successfully!
+2019-12-18 12:31:13,921 - FL-type - INFO - client 65466 available time:180.0
+2019-12-18 12:31:13,952 - FL-type - INFO - client 65466 upload successfully!
+2019-12-18 12:31:13,966 - FL-type - INFO - client 72759 available time:180.0
+2019-12-18 12:31:13,997 - FL-type - INFO - client 72759 upload successfully!
+2019-12-18 12:31:14,012 - FL-type - INFO - client 1204 available time:180.0
+2019-12-18 12:31:14,068 - FL-type - INFO - client 1204 upload successfully!
+2019-12-18 12:31:14,082 - FL-type - INFO - client 57926 available time:180.0
+2019-12-18 12:31:14,241 - FL-type - INFO - client 57926 upload successfully!
+2019-12-18 12:31:14,255 - FL-type - INFO - client 44747 available time:180.0
+2019-12-18 12:31:14,461 - FL-type - INFO - client 44747 upload successfully!
+2019-12-18 12:31:14,475 - FL-type - INFO - client 29708 available time:180.0
+2019-12-18 12:31:14,701 - FL-type - INFO - client 29708 upload successfully!
+2019-12-18 12:31:14,715 - FL-type - INFO - client 47590 available time:180.0
+2019-12-18 12:31:14,767 - FL-type - INFO - client 47590 upload successfully!
+2019-12-18 12:31:14,781 - FL-type - INFO - client 60366 available time:179.0
+2019-12-18 12:31:14,810 - FL-type - INFO - client 60366 upload successfully!
+2019-12-18 12:31:14,823 - FL-type - INFO - client 16986 available time:180.0
+2019-12-18 12:31:14,876 - FL-type - INFO - client 16986 upload successfully!
+2019-12-18 12:31:14,890 - FL-type - INFO - client 19526 available time:153.0
+2019-12-18 12:31:14,917 - FL-type - INFO - client 19526 upload successfully!
+2019-12-18 12:31:14,931 - FL-type - INFO - client 23560 available time:180.0
+2019-12-18 12:31:14,985 - FL-type - INFO - client 23560 upload successfully!
+2019-12-18 12:31:14,985 - FL-type - INFO - configuration and update stage simulation time: 15.64
+2019-12-18 12:31:15,091 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:31:15,092 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:31:15,092 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:31:29,790 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:34:40,497 - FL-type - INFO - train_accuracy: 0.0174735, 10th percentile: 0, 50th percentile: 0.0155039, 90th percentile 0.0266431
+2019-12-18 12:34:40,499 - FL-type - INFO - train_loss: 9.06597, 10th percentile: 8.65749, 50th percentile: 9.10776, 90th percentile 9.12918
+2019-12-18 12:38:06,968 - FL-type - INFO - test_accuracy: 0.0173652, 10th percentile: 0, 50th percentile: 0.015528, 90th percentile 0.0266667
+2019-12-18 12:38:06,969 - FL-type - INFO - test_loss: 9.06357, 10th percentile: 8.70431, 50th percentile: 9.10837, 90th percentile 9.12909
+2019-12-18 12:38:11,293 - FL-type - INFO - ===================== Round 181 of 9223372036854775807 =====================
+2019-12-18 12:38:11,294 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:38:11,294 - FL-type - INFO - current time: 6859.82076781449	time window: 20.0	
+2019-12-18 12:38:11,295 - FL-type - INFO - 81 of 813 clients online
+2019-12-18 12:38:11,296 - FL-type - INFO - selected client_ids: ['16986', '71031', '65395', '69127', '7186', '24532', '47632', '45876', '12277', '19526', '41692', '62167', '77911', '34503', '55702', '9495', '8692', '44747', '47590', '7923']
+2019-12-18 12:38:11,296 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:38:11,296 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:38:11,311 - FL-type - INFO - client 16986 available time:180.0
+2019-12-18 12:38:11,370 - FL-type - INFO - client 16986 upload successfully!
+2019-12-18 12:38:11,384 - FL-type - INFO - client 71031 available time:180.0
+2019-12-18 12:38:11,417 - FL-type - INFO - client 71031 upload successfully!
+2019-12-18 12:38:11,431 - FL-type - INFO - client 65395 available time:180.0
+2019-12-18 12:38:11,545 - FL-type - INFO - client 65395 upload successfully!
+2019-12-18 12:38:11,559 - FL-type - INFO - client 69127 available time:180.0
+2019-12-18 12:38:11,618 - FL-type - INFO - client 69127 upload successfully!
+2019-12-18 12:38:11,632 - FL-type - INFO - client 7186 available time:180.0
+2019-12-18 12:38:11,744 - FL-type - INFO - client 7186 upload successfully!
+2019-12-18 12:38:11,758 - FL-type - INFO - client 24532 available time:179.0
+2019-12-18 12:38:12,403 - FL-type - INFO - client 24532 upload successfully!
+2019-12-18 12:38:12,417 - FL-type - INFO - client 47632 available time:180.0
+2019-12-18 12:38:12,468 - FL-type - INFO - client 47632 upload successfully!
+2019-12-18 12:38:12,482 - FL-type - INFO - client 45876 available time:180.0
+2019-12-18 12:38:12,510 - FL-type - INFO - client 45876 upload successfully!
+2019-12-18 12:38:12,523 - FL-type - INFO - client 12277 available time:180.0
+2019-12-18 12:38:12,923 - FL-type - INFO - client 12277 upload successfully!
+2019-12-18 12:38:12,937 - FL-type - INFO - client 19526 available time:118.0
+2019-12-18 12:38:12,965 - FL-type - INFO - client 19526 upload successfully!
+2019-12-18 12:38:12,979 - FL-type - INFO - client 41692 available time:180.0
+2019-12-18 12:38:13,007 - FL-type - INFO - client 41692 upload successfully!
+2019-12-18 12:38:13,021 - FL-type - INFO - client 62167 available time:180.0
+2019-12-18 12:38:13,048 - FL-type - INFO - client 62167 upload successfully!
+2019-12-18 12:38:13,062 - FL-type - INFO - client 77911 available time:180.0
+2019-12-18 12:38:13,113 - FL-type - INFO - client 77911 upload successfully!
+2019-12-18 12:38:13,127 - FL-type - INFO - client 34503 available time:180.0
+2019-12-18 12:38:13,177 - FL-type - INFO - client 34503 upload successfully!
+2019-12-18 12:38:13,190 - FL-type - INFO - client 55702 available time:180.0
+2019-12-18 12:38:13,241 - FL-type - INFO - client 55702 upload successfully!
+2019-12-18 12:38:13,254 - FL-type - INFO - client 9495 available time:180.0
+2019-12-18 12:38:13,282 - FL-type - INFO - client 9495 upload successfully!
+2019-12-18 12:38:13,296 - FL-type - INFO - client 8692 available time:180.0
+2019-12-18 12:38:13,324 - FL-type - INFO - client 8692 upload successfully!
+2019-12-18 12:38:13,337 - FL-type - INFO - client 44747 available time:180.0
+2019-12-18 12:38:13,527 - FL-type - INFO - client 44747 upload successfully!
+2019-12-18 12:38:13,540 - FL-type - INFO - client 47590 available time:180.0
+2019-12-18 12:38:13,591 - FL-type - INFO - client 47590 upload successfully!
+2019-12-18 12:38:13,605 - FL-type - INFO - client 7923 available time:180.0
+2019-12-18 12:38:13,633 - FL-type - INFO - client 7923 upload successfully!
+2019-12-18 12:38:13,633 - FL-type - INFO - configuration and update stage simulation time: 17.142857142857142
+2019-12-18 12:38:13,745 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:38:13,745 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:38:13,745 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:38:28,455 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:41:38,278 - FL-type - INFO - train_accuracy: 0.0172198, 10th percentile: 0, 50th percentile: 0.0159091, 90th percentile 0.0264364
+2019-12-18 12:41:38,279 - FL-type - INFO - train_loss: 9.06116, 10th percentile: 8.72158, 50th percentile: 9.10804, 90th percentile 9.12818
+2019-12-18 12:45:05,661 - FL-type - INFO - test_accuracy: 0.0176296, 10th percentile: 0, 50th percentile: 0.0159363, 90th percentile 0.0274273
+2019-12-18 12:45:05,662 - FL-type - INFO - test_loss: 9.06261, 10th percentile: 8.65912, 50th percentile: 9.10729, 90th percentile 9.12788
+2019-12-18 12:45:10,004 - FL-type - INFO - ===================== Round 182 of 9223372036854775807 =====================
+2019-12-18 12:45:10,004 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:45:10,004 - FL-type - INFO - current time: 6896.963624957347	time window: 20.0	
+2019-12-18 12:45:10,006 - FL-type - INFO - 80 of 813 clients online
+2019-12-18 12:45:10,007 - FL-type - INFO - selected client_ids: ['31805', '47590', '62167', '23560', '2435', '9645', '49810', '35703', '67432', '22553', '48240', '3588', '69127', '16214', '71031', '61843', '41573', '24784', '70497', '50799']
+2019-12-18 12:45:10,007 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:45:10,007 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:45:10,021 - FL-type - INFO - client 31805 available time:180.0
+2019-12-18 12:45:10,807 - FL-type - INFO - client 31805 upload successfully!
+2019-12-18 12:45:10,822 - FL-type - INFO - client 47590 available time:180.0
+2019-12-18 12:45:10,873 - FL-type - INFO - client 47590 upload successfully!
+2019-12-18 12:45:10,887 - FL-type - INFO - client 62167 available time:180.0
+2019-12-18 12:45:10,916 - FL-type - INFO - client 62167 upload successfully!
+2019-12-18 12:45:10,930 - FL-type - INFO - client 23560 available time:180.0
+2019-12-18 12:45:10,981 - FL-type - INFO - client 23560 upload successfully!
+2019-12-18 12:45:10,995 - FL-type - INFO - client 2435 available time:180.0
+2019-12-18 12:45:11,188 - FL-type - INFO - client 2435 upload successfully!
+2019-12-18 12:45:11,202 - FL-type - INFO - client 9645 available time:180.0
+2019-12-18 12:45:11,229 - FL-type - INFO - client 9645 upload successfully!
+2019-12-18 12:45:11,243 - FL-type - INFO - client 49810 available time:180.0
+2019-12-18 12:45:11,294 - FL-type - INFO - client 49810 upload successfully!
+2019-12-18 12:45:11,308 - FL-type - INFO - client 35703 available time:180.0
+2019-12-18 12:45:11,383 - FL-type - INFO - client 35703 upload successfully!
+2019-12-18 12:45:11,398 - FL-type - INFO - client 67432 available time:180.0
+2019-12-18 12:45:11,590 - FL-type - INFO - client 67432 upload successfully!
+2019-12-18 12:45:11,604 - FL-type - INFO - client 22553 available time:180.0
+2019-12-18 12:45:11,680 - FL-type - INFO - client 22553 upload successfully!
+2019-12-18 12:45:11,694 - FL-type - INFO - client 48240 available time:180.0
+2019-12-18 12:45:11,908 - FL-type - INFO - client 48240 upload successfully!
+2019-12-18 12:45:11,922 - FL-type - INFO - client 3588 available time:180.0
+2019-12-18 12:45:12,022 - FL-type - INFO - client 3588 upload successfully!
+2019-12-18 12:45:12,036 - FL-type - INFO - client 69127 available time:180.0
+2019-12-18 12:45:12,086 - FL-type - INFO - client 69127 upload successfully!
+2019-12-18 12:45:12,100 - FL-type - INFO - client 16214 available time:180.0
+2019-12-18 12:45:12,176 - FL-type - INFO - client 16214 upload successfully!
+2019-12-18 12:45:12,190 - FL-type - INFO - client 71031 available time:180.0
+2019-12-18 12:45:12,218 - FL-type - INFO - client 71031 upload successfully!
+2019-12-18 12:45:12,232 - FL-type - INFO - client 61843 available time:180.0
+2019-12-18 12:45:12,260 - FL-type - INFO - client 61843 upload successfully!
+2019-12-18 12:45:12,274 - FL-type - INFO - client 41573 available time:180.0
+2019-12-18 12:45:12,421 - FL-type - INFO - client 41573 upload successfully!
+2019-12-18 12:45:12,435 - FL-type - INFO - client 24784 available time:180.0
+2019-12-18 12:45:12,795 - FL-type - INFO - client 24784 upload successfully!
+2019-12-18 12:45:12,809 - FL-type - INFO - client 70497 available time:180.0
+2019-12-18 12:45:12,907 - FL-type - INFO - client 70497 upload successfully!
+2019-12-18 12:45:12,921 - FL-type - INFO - client 50799 available time:180.0
+2019-12-18 12:45:12,950 - FL-type - INFO - client 50799 upload successfully!
+2019-12-18 12:45:12,950 - FL-type - INFO - configuration and update stage simulation time: 15.846153846153847
+2019-12-18 12:45:13,055 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:45:13,056 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:45:13,056 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:45:27,766 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:48:36,867 - FL-type - INFO - train_accuracy: 0.017609, 10th percentile: 0, 50th percentile: 0.015625, 90th percentile 0.0276511
+2019-12-18 12:48:36,868 - FL-type - INFO - train_loss: 9.06253, 10th percentile: 8.65944, 50th percentile: 9.10762, 90th percentile 9.12808
+2019-12-18 12:51:56,225 - FL-type - INFO - test_accuracy: 0.0175267, 10th percentile: 0, 50th percentile: 0.0157368, 90th percentile 0.0266115
+2019-12-18 12:51:56,226 - FL-type - INFO - test_loss: 9.06498, 10th percentile: 8.75753, 50th percentile: 9.10786, 90th percentile 9.12815
+2019-12-18 12:52:00,555 - FL-type - INFO - ===================== Round 183 of 9223372036854775807 =====================
+2019-12-18 12:52:00,555 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:52:00,555 - FL-type - INFO - current time: 6932.809778803501	time window: 20.0	
+2019-12-18 12:52:00,557 - FL-type - INFO - 79 of 813 clients online
+2019-12-18 12:52:00,558 - FL-type - INFO - selected client_ids: ['3107', '23560', '51525', '29708', '2043', '34503', '41692', '49810', '35703', '54374', '60366', '58682', '50799', '62167', '66673', '36037', '60848', '63024', '61843', '69563']
+2019-12-18 12:52:00,558 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:52:00,558 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:52:00,573 - FL-type - INFO - client 3107 available time:180.0
+2019-12-18 12:52:00,788 - FL-type - INFO - client 3107 upload successfully!
+2019-12-18 12:52:00,802 - FL-type - INFO - client 23560 available time:180.0
+2019-12-18 12:52:00,857 - FL-type - INFO - client 23560 upload successfully!
+2019-12-18 12:52:00,872 - FL-type - INFO - client 51525 available time:180.0
+2019-12-18 12:52:00,927 - FL-type - INFO - client 51525 upload successfully!
+2019-12-18 12:52:00,941 - FL-type - INFO - client 29708 available time:180.0
+2019-12-18 12:52:01,168 - FL-type - INFO - client 29708 upload successfully!
+2019-12-18 12:52:01,182 - FL-type - INFO - client 2043 available time:180.0
+2019-12-18 12:52:02,919 - FL-type - INFO - client 2043 upload successfully!
+2019-12-18 12:52:02,932 - FL-type - INFO - client 34503 available time:180.0
+2019-12-18 12:52:02,983 - FL-type - INFO - client 34503 upload successfully!
+2019-12-18 12:52:02,996 - FL-type - INFO - client 41692 available time:180.0
+2019-12-18 12:52:03,023 - FL-type - INFO - client 41692 upload successfully!
+2019-12-18 12:52:03,037 - FL-type - INFO - client 49810 available time:180.0
+2019-12-18 12:52:03,088 - FL-type - INFO - client 49810 upload successfully!
+2019-12-18 12:52:03,102 - FL-type - INFO - client 35703 available time:180.0
+2019-12-18 12:52:03,174 - FL-type - INFO - client 35703 upload successfully!
+2019-12-18 12:52:03,188 - FL-type - INFO - client 54374 available time:180.0
+2019-12-18 12:52:03,306 - FL-type - INFO - client 54374 upload successfully!
+2019-12-18 12:52:03,320 - FL-type - INFO - client 60366 available time:179.0
+2019-12-18 12:52:03,346 - FL-type - INFO - client 60366 upload successfully!
+2019-12-18 12:52:03,360 - FL-type - INFO - client 58682 available time:180.0
+2019-12-18 12:52:03,387 - FL-type - INFO - client 58682 upload successfully!
+2019-12-18 12:52:03,401 - FL-type - INFO - client 50799 available time:180.0
+2019-12-18 12:52:03,429 - FL-type - INFO - client 50799 upload successfully!
+2019-12-18 12:52:03,443 - FL-type - INFO - client 62167 available time:180.0
+2019-12-18 12:52:03,469 - FL-type - INFO - client 62167 upload successfully!
+2019-12-18 12:52:03,483 - FL-type - INFO - client 66673 available time:180.0
+2019-12-18 12:52:03,510 - FL-type - INFO - client 66673 upload successfully!
+2019-12-18 12:52:03,523 - FL-type - INFO - client 36037 available time:180.0
+2019-12-18 12:52:03,550 - FL-type - INFO - client 36037 upload successfully!
+2019-12-18 12:52:03,564 - FL-type - INFO - client 60848 available time:180.0
+2019-12-18 12:52:03,683 - FL-type - INFO - client 60848 upload successfully!
+2019-12-18 12:52:03,697 - FL-type - INFO - client 63024 available time:180.0
+2019-12-18 12:52:03,724 - FL-type - INFO - client 63024 upload successfully!
+2019-12-18 12:52:03,738 - FL-type - INFO - client 61843 available time:180.0
+2019-12-18 12:52:03,765 - FL-type - INFO - client 61843 upload successfully!
+2019-12-18 12:52:03,779 - FL-type - INFO - client 69563 available time:180.0
+2019-12-18 12:52:03,898 - FL-type - INFO - client 69563 upload successfully!
+2019-12-18 12:52:03,898 - FL-type - INFO - configuration and update stage simulation time: 16.076923076923077
+2019-12-18 12:52:04,003 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:52:04,003 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:52:04,003 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:52:18,412 - FL-type - INFO - --------------------- test result ---------------------
+2019-12-18 12:55:30,427 - FL-type - INFO - train_accuracy: 0.0176839, 10th percentile: 0.000915014, 50th percentile: 0.0158085, 90th percentile 0.0264796
+2019-12-18 12:55:30,428 - FL-type - INFO - train_loss: 9.06113, 10th percentile: 8.73877, 50th percentile: 9.10549, 90th percentile 9.12668
+2019-12-18 12:58:55,481 - FL-type - INFO - test_accuracy: 0.017826, 10th percentile: 0, 50th percentile: 0.016129, 90th percentile 0.0284313
+2019-12-18 12:58:55,483 - FL-type - INFO - test_loss: 9.06025, 10th percentile: 8.67956, 50th percentile: 9.10477, 90th percentile 9.1269
+2019-12-18 12:58:59,791 - FL-type - INFO - ===================== Round 184 of 9223372036854775807 =====================
+2019-12-18 12:58:59,791 - FL-type - INFO - --------------------- selection stage ---------------------
+2019-12-18 12:58:59,791 - FL-type - INFO - current time: 6968.886701880424	time window: 20.0	
+2019-12-18 12:58:59,793 - FL-type - INFO - 78 of 813 clients online
+2019-12-18 12:58:59,794 - FL-type - INFO - selected client_ids: ['3588', '62167', '81372', '53611', '29708', '58213', '9495', '60848', '31396', '69127', '61843', '20209', '2043', '57926', '54374', '66673', '55702', '49810', '79656', '77911']
+2019-12-18 12:58:59,794 - FL-type - INFO - selected deadline: 180
+2019-12-18 12:58:59,794 - FL-type - INFO - --------------------- configuration stage ---------------------
+2019-12-18 12:58:59,809 - FL-type - INFO - client 3588 available time:180.0
+2019-12-18 12:58:59,923 - FL-type - INFO - client 3588 upload successfully!
+2019-12-18 12:58:59,938 - FL-type - INFO - client 62167 available time:180.0
+2019-12-18 12:58:59,970 - FL-type - INFO - client 62167 upload successfully!
+2019-12-18 12:58:59,984 - FL-type - INFO - client 81372 available time:180.0
+2019-12-18 12:59:00,044 - FL-type - INFO - client 81372 upload successfully!
+2019-12-18 12:59:00,058 - FL-type - INFO - client 53611 available time:139.0
+2019-12-18 12:59:00,170 - FL-type - INFO - client 53611 upload successfully!
+2019-12-18 12:59:00,185 - FL-type - INFO - client 29708 available time:180.0
+2019-12-18 12:59:00,421 - FL-type - INFO - client 29708 upload successfully!
+2019-12-18 12:59:00,436 - FL-type - INFO - client 58213 available time:180.0
+2019-12-18 12:59:00,466 - FL-type - INFO - client 58213 upload successfully!
+2019-12-18 12:59:00,480 - FL-type - INFO - client 9495 available time:180.0
+2019-12-18 12:59:00,511 - FL-type - INFO - client 9495 upload successfully!
+2019-12-18 12:59:00,526 - FL-type - INFO - client 60848 available time:180.0
+2019-12-18 12:59:00,657 - FL-type - INFO - client 60848 upload successfully!
+2019-12-18 12:59:00,671 - FL-type - INFO - client 31396 available time:180.0
+2019-12-18 12:59:00,725 - FL-type - INFO - client 31396 upload successfully!
+2019-12-18 12:59:00,740 - FL-type - INFO - client 69127 available time:180.0
+2019-12-18 12:59:00,795 - FL-type - INFO - client 69127 upload successfully!
+2019-12-18 12:59:00,809 - FL-type - INFO - client 61843 available time:180.0
+2019-12-18 12:59:00,838 - FL-type - INFO - client 61843 upload successfully!
+2019-12-18 12:59:00,853 - FL-type - INFO - client 20209 available time:180.0
+2019-12-18 12:59:00,883 - FL-type - INFO - client 20209 upload successfully!
+2019-12-18 12:59:00,898 - FL-type - INFO - client 2043 available time:180.0
+2019-12-18 12:59:02,669 - FL-type - INFO - client 2043 upload successfully!
+2019-12-18 12:59:02,684 - FL-type - INFO - client 57926 available time:180.0
+2019-12-18 12:59:02,828 - FL-type - INFO - client 57926 upload successfully!
+2019-12-18 12:59:02,842 - FL-type - INFO - client 54374 available time:180.0
+2019-12-18 12:59:02,965 - FL-type - INFO - client 54374 upload successfully!
+2019-12-18 12:59:02,979 - FL-type - INFO - client 66673 available time:180.0
+2019-12-18 12:59:03,007 - FL-type - INFO - client 66673 upload successfully!
+2019-12-18 12:59:03,022 - FL-type - INFO - client 55702 available time:180.0
+2019-12-18 12:59:03,074 - FL-type - INFO - client 55702 upload successfully!
+2019-12-18 12:59:03,088 - FL-type - INFO - client 49810 available time:180.0
+2019-12-18 12:59:03,141 - FL-type - INFO - client 49810 upload successfully!
+2019-12-18 12:59:03,155 - FL-type - INFO - client 79656 available time:48.0
+2019-12-18 12:59:03,229 - FL-type - INFO - client 79656 upload successfully!
+2019-12-18 12:59:03,243 - FL-type - INFO - client 77911 available time:178.0
+2019-12-18 12:59:03,295 - FL-type - INFO - client 77911 upload successfully!
+2019-12-18 12:59:03,295 - FL-type - INFO - configuration and update stage simulation time: 17.166666666666668
+2019-12-18 12:59:03,405 - FL-type - INFO - --------------------- report stage ---------------------
+2019-12-18 12:59:03,405 - FL-type - INFO - 20 of 20 clients upload successfully
+2019-12-18 12:59:03,405 - FL-type - INFO - round succeed, updating global model...
+2019-12-18 12:59:19,478 - FL-type - INFO - --------------------- test result ---------------------
