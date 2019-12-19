@@ -88,12 +88,13 @@ class Model(ABC):
             update: List of np.ndarray weights, with each weight array
                 corresponding to a variable in the resulting graph
         """
-        for _ in range(num_epochs):
-            self.run_epoch(data, batch_size)
+        acc_and_loss = {}
+        for i in range(num_epochs):
+            acc_and_loss[i]  = self.run_epoch(data, batch_size)
 
         update = self.get_params()
         comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
-        return comp, update
+        return comp, update, acc_and_loss
 
     def run_epoch(self, data, batch_size):
 
@@ -103,11 +104,13 @@ class Model(ABC):
             target_data = self.process_y(batched_y)
             
             with self.graph.as_default():
-                self.sess.run(self.train_op,
+                    tot_acc, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
                     feed_dict={
                         self.features: input_data,
                         self.labels: target_data
                     })
+        acc = float(tot_acc) / input_data.shape[0]
+        return {'acc': acc, 'loss': loss}
 
     def test(self, data):
         """
