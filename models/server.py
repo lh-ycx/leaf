@@ -62,7 +62,8 @@ class Server:
         sys_metrics = {
             c.id: {BYTES_WRITTEN_KEY: 0,
                    BYTES_READ_KEY: 0,
-                   LOCAL_COMPUTATIONS_KEY: 0} for c in clients}
+                   LOCAL_COMPUTATIONS_KEY: 0,
+                   'epoch_stat': {}} for c in clients}
         # for c in self.all_clients:
             # c.model.set_params(self.model)
         simulate_time = 0
@@ -73,13 +74,14 @@ class Server:
                 c.set_deadline(deadline)
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
-                simulate_time_c, comp, num_samples, update = c.train(num_epochs, batch_size, minibatch)
+                simulate_time_c, comp, num_samples, update, acc_and_loss = c.train(num_epochs, batch_size, minibatch)
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 if simulate_time_c > simulate_time:
                     simulate_time = simulate_time_c
                 sys_metrics[c.id][BYTES_READ_KEY] += c.model.size
                 sys_metrics[c.id][BYTES_WRITTEN_KEY] += c.model.size
                 sys_metrics[c.id][LOCAL_COMPUTATIONS_KEY] = comp
+                sys_metrics[c.id]['epoch_stat']= acc_and_loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
                 logger.info('client {} upload successfully!'.format(c.id))
