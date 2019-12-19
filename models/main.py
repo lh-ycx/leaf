@@ -163,7 +163,16 @@ def main():
             continue
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
             logger.info('--------------------- test result ---------------------')
-            print_stats(i + 1, server, clients, client_num_samples, args, stat_writer_fn)
+            #select randomly sample_scale* #clients for model testing
+            np.random.seed(i)
+            sample_scale = 0.4
+            sample_scale = np.random.normal(sample_scale,0.1)
+            sample_clients = np.random.choice(clients, int(len(clients)*sample_scale), replace=False)
+            sc_ids, sc_groups, sc_num_samples = server.get_clients_info(sample_clients)
+            logger.info('number of clients for test: {} of {} '.format(len(sample_clients),len(clients)))
+            another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
+            print_stats(i + 1, server, sample_clients, sc_num_samples, args, another_stat_writer_fn)
+            #print_stats(i + 1, server, clients, client_num_samples, args, stat_writer_fn)
         
     
     # Save server model
