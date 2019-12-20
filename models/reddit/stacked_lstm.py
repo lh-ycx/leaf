@@ -178,6 +178,8 @@ class ClientModel(Model):
         }
 
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
+            tot_acc, tot_samples = 0, 0
+            tot_loss, tot_batches = 0, 0
 
             feed_dict = {
                 self.features: input_data,
@@ -195,9 +197,18 @@ class ClientModel(Model):
                 feed_dict[h] = state[i].h
 
             with self.graph.as_default():
-                _, vals = self.sess.run([self.train_op, fetches], feed_dict=feed_dict)
+                _, vals, acc, loss = self.sess.run([self.train_op, fetches, self.eval_metric_ops, self.loss], feed_dict=feed_dict)
             
             state = vals['final_state']
+            tot_acc += acc
+            tot_samples += np.sum(input_lengths)
+
+            tot_loss += loss
+            tot_batches += 1
+
+        acc = float(tot_acc) / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
+        loss = tot_loss / tot_batches # the loss is already averaged over samples
+        return {'accuracy': acc, 'loss': loss}
 
     def test(self, data, batch_size=5):
         tot_acc, tot_samples = 0, 0

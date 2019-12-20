@@ -210,7 +210,6 @@ class Client:
         if self.device != None:
             self.upload_time = self.device.get_upload_time()
             logger.debug('client {} upload time: {}'.format(self.id, self.upload_time))
-        
         if self.upload_time < self.deadline :
             return self.deadline - self.upload_time
         else:
