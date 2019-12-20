@@ -22,6 +22,6 @@ class Logger():
     def set_log_name(self, name):
         while name[-4:] == '.log':
             name = name[:-4]
-            Logger.log_name = name
+        Logger.log_name = name
     
     

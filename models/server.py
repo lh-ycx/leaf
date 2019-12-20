@@ -64,7 +64,8 @@ class Server:
             c.id: {BYTES_WRITTEN_KEY: 0,
                    BYTES_READ_KEY: 0,
                    LOCAL_COMPUTATIONS_KEY: 0,
-                   'epoch_stat': {}} for c in clients}
+                   'acc': {},
+                   'loss': {}} for c in clients}
         # for c in self.all_clients:
             # c.model.set_params(self.model)
         simulate_time = 0
@@ -87,7 +88,8 @@ class Server:
                 sys_metrics[c.id][BYTES_READ_KEY] += c.model.size
                 sys_metrics[c.id][BYTES_WRITTEN_KEY] += c.model.size
                 sys_metrics[c.id][LOCAL_COMPUTATIONS_KEY] = comp
-                sys_metrics[c.id]['epoch_stat']= acc_and_loss
+                sys_metrics[c.id]['acc'] = acc
+                sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
                 logger.info('client {} upload successfully!'.format(c.id))
