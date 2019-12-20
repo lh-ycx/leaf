@@ -30,9 +30,13 @@ def main():
     eventlet.monkey_patch()
     args = parse_args()
     
+    '''
     config_name = args.config_file
     while config_name[-4:] == '.cfg':
         config_name = config_name[:-4]
+    '''
+    
+    config_name = 'reddit_FedAvg_1'     # dataset_aggregateAlgorithm_E
     
     # logger
     L = Logger()
@@ -40,7 +44,7 @@ def main():
     logger = L.get_logger()
     
     # read config from file
-    cfg = Config('reddit.cfg')
+    cfg = Config('{}.cfg'.format(config_name))
 
     # Set the random seed if provided (affects client sampling, and batching)
     random.seed(1 + cfg.seed)
@@ -86,7 +90,7 @@ def main():
     clients = setup_clients(cfg, client_model)
     # print(sorted([c.num_train_samples for c in clients]))
     # Create server
-    server = Server(client_model, clients)
+    server = Server(client_model, clients, cfg = cfg)
     
     client_ids, client_groups, client_num_samples = server.get_clients_info(clients)
     
@@ -163,7 +167,8 @@ def main():
             continue
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
             logger.info('--------------------- test result ---------------------')
-            print_stats(i + 1, server, clients, client_num_samples, args, stat_writer_fn)
+            test_clients = random.sample(clients, 50)
+            print_stats(i + 1, server, test_clients, client_num_samples, args, stat_writer_fn)
         
     
     # Save server model
@@ -229,11 +234,12 @@ def print_stats(
     
     train_stat_metrics = server.test_model(clients, set_to_use='train')
     print_metrics(train_stat_metrics, num_samples, prefix='train_')
-    writer(num_round, train_stat_metrics, 'train')
+    # result will be out put by log
+    # writer(num_round, train_stat_metrics, 'train')
 
     test_stat_metrics = server.test_model(clients, set_to_use='test')
     print_metrics(test_stat_metrics, num_samples, prefix='test_')
-    writer(num_round, test_stat_metrics, 'test')
+    # writer(num_round, test_stat_metrics, 'test')
 
 
 def print_metrics(metrics, weights, prefix=''):
@@ -245,7 +251,7 @@ def print_metrics(metrics, weights, prefix=''):
         weights: dict with client ids as keys. Each entry is the weight
             for that client.
     """
-    client_ids = [c for c in sorted(weights)]
+    client_ids = [c for c in sorted(metrics.keys())]
     ordered_weights = [weights[c] for c in client_ids]
     metric_names = metrics_writer.get_metrics_names(metrics)
     to_ret = None

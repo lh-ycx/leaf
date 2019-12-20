@@ -10,12 +10,13 @@ logger = L.get_logger()
 
 class Server:
     
-    def __init__(self, client_model, clients=[]):
+    def __init__(self, client_model, clients=[], cfg = None):
         self.client_model = client_model
         self.model = client_model.get_params()
         self.selected_clients = []
         self.all_clients = clients
         self.updates = []
+        self.cfg = cfg
 
     def select_clients(self, my_round, possible_clients, num_clients=20):
         """Selects num_clients clients randomly from possible_clients.
@@ -66,6 +67,8 @@ class Server:
         # for c in self.all_clients:
             # c.model.set_params(self.model)
         simulate_time = 0
+        accs = []
+        losses = []
         for c in clients:
             c.model.set_params(self.model)
             try:
@@ -73,8 +76,11 @@ class Server:
                 c.set_deadline(deadline)
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
-                simulate_time_c, comp, num_samples, update = c.train(num_epochs, batch_size, minibatch)
+                simulate_time_c, comp, num_samples, update, acc, loss = c.train(num_epochs, batch_size, minibatch)
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
+                logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
+                accs.append(acc)
+                losses.append(loss)
                 if simulate_time_c > simulate_time:
                     simulate_time = simulate_time_c
                 sys_metrics[c.id][BYTES_READ_KEY] += c.model.size
@@ -90,29 +96,69 @@ class Server:
                 logger.error('client {} failed: {}'.format(c.id, e))
                 traceback.print_exc()
         logger.info('simulation time: {}'.format(simulate_time))
+        avg_acc = sum(accs)/len(accs)
+        avg_loss = sum(losses)/len(losses)
+        logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
         return sys_metrics
 
     def update_model(self, update_frac):
         logger.info('{} of {} clients upload successfully'.format(len(self.updates), len(self.selected_clients)))
         if len(self.updates) / len(self.selected_clients) >= update_frac:        
             logger.info('round succeed, updating global model...')
-            used_client_ids = [cid for (cid, client_samples, client_model) in self.updates]
-            total_weight = 0.
-            base = [0] * len(self.updates[0][2])
-            for (cid, client_samples, client_model) in self.updates:
-                total_weight += client_samples
-                for i, v in enumerate(client_model):
-                    base[i] += (client_samples * v.astype(np.float64))
-            for c in self.all_clients:
-                if c.id not in used_client_ids:
-                    # c was not trained in this round
-                    # params = c.model.get_params()
-                    params = self.model
-                    total_weight += c.num_train_samples  # assume that all train_data is used to update
-                    for i, v in enumerate(params):
-                        base[i] += (c.num_train_samples * v.astype(np.float64))
-            averaged_soln = [v / total_weight for v in base]
-            self.model = averaged_soln
+            if self.cfg.aggregate_algorithm == 'FedAvg':
+                # aggregate all the clients
+                logger.info('Aggragate with FedAvg')
+                used_client_ids = [cid for (cid, client_samples, client_model) in self.updates]
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_model) in self.updates:
+                    total_weight += client_samples
+                    for i, v in enumerate(client_model):
+                        base[i] += (client_samples * v.astype(np.float64))
+                for c in self.all_clients:
+                    if c.id not in used_client_ids:
+                        # c was not trained in this round
+                        params = self.model
+                        total_weight += c.num_train_samples  # assume that all train_data is used to update
+                        for i, v in enumerate(params):
+                            base[i] += (c.num_train_samples * v.astype(np.float64))
+                averaged_soln = [v / total_weight for v in base]
+                self.model = averaged_soln
+            elif self.cfg.aggregate_algorithm == 'SucFedAvg':
+                # aggregate the successfully uploaded clients
+                logger.info('Aggragate with SucFedAvg')
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_model) in self.updates:
+                    total_weight += client_samples
+                    for i, v in enumerate(client_model):
+                        base[i] += (client_samples * v.astype(np.float64))
+                averaged_soln = [v / total_weight for v in base]
+                self.model = averaged_soln
+            elif self.cfg.aggregate_algorithm == 'SelFedAvg':
+                # aggregate the selected clients
+                logger.info('Aggragate with SelFedAvg')
+                used_client_ids = [cid for (cid, client_samples, client_model) in self.updates]
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_model) in self.updates:
+                    total_weight += client_samples
+                    for i, v in enumerate(client_model):
+                        base[i] += (client_samples * v.astype(np.float64))
+                for c in self.selected_clients:
+                    if c.id not in used_client_ids:
+                        # c was failed in this round but was selected
+                        params = self.model
+                        total_weight += c.num_train_samples  # assume that all train_data is used to update
+                        for i, v in enumerate(params):
+                            base[i] += (c.num_train_samples * v.astype(np.float64))
+                averaged_soln = [v / total_weight for v in base]
+                self.model = averaged_soln
+            else:
+                # not supported aggregating algorithm
+                logger.error('not supported aggregating algorithm: {}'.format(self.cfg.aggregate_algorithm))
+                assert False
+                
         else:
             logger.info('round failed, global model maintained.')
         self.updates = []

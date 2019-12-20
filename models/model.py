@@ -91,9 +91,13 @@ class Model(ABC):
         for _ in range(num_epochs):
             self.run_epoch(data, batch_size)
 
+        train_reslt = self.test(data)
+        acc = train_reslt[ACCURACY_KEY]
+        loss = train_reslt['loss']
+        
         update = self.get_params()
         comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
-        return comp, update
+        return comp, update, acc, loss
 
     def run_epoch(self, data, batch_size):
 

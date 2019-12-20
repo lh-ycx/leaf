@@ -30,6 +30,7 @@ class Config():
         self.big_speed = [150.0, 1.0]
         self.mid_speed = [100.0, 1.0]
         self.small_speed = [50.0, 1.0]
+        self.aggregate_algorithm = 'FedAvg'
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -84,6 +85,8 @@ class Config():
                         self.mid_speed = [float(line[1]), float(line[2])]
                     elif line[0] == 'small_speed':
                         self.small_speed = [float(line[1]), float(line[2])]
+                    elif line[0] == 'aggregate_algorithm':
+                        self.aggregate_algorithm = str(line[1])
                 except Exception as e:
                     traceback.print_exc()
     

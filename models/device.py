@@ -51,13 +51,13 @@ class Device():
     
     def get_speed(self):
         speed = np.random.normal(self.speed_u, self.speed_sigma)
-        while speed <= 0:
+        while speed < 0:
             speed = np.random.normal(self.speed_u, self.speed_sigma)
-        return int(speed)
+        return float(speed)
     
     def get_upload_time(self):
         upload_time = np.random.normal(self.upload_time_u, self.upload_time_sigma)
-        while upload_time <= 0:
+        while upload_time < 0:
             upload_time = np.random.normal(self.upload_time_u, self.upload_time_sigma)
-        return int(upload_time)
+        return float(upload_time)
     
