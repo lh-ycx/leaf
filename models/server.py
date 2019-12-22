@@ -92,9 +92,9 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
-                logger.info('client {} upload successfully!'.format(c.id))
+                logger.debug('client {} upload successfully!'.format(c.id))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
-                logger.info('client {} failed: timeout!'.format(c.id))
+                logger.debug('client {} failed: timeout!'.format(c.id))
                 simulate_time = deadline
             except Exception as e:
                 logger.error('client {} failed: {}'.format(c.id, e))
