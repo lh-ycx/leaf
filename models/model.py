@@ -108,7 +108,7 @@ class Model(ABC):
             target_data = self.process_y(batched_y)
             
             with self.graph.as_default():
-                    tot_acc, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
+                    _, tot_acc, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
                     feed_dict={
                         self.features: input_data,
                         self.labels: target_data
