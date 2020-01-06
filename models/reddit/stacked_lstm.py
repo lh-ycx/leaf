@@ -84,7 +84,7 @@ class ClientModel(Model):
                 average_across_batch=True)
 
             # Update the cost
-            #self.cost = tf.reduce_sum(loss)
+            # self.cost = tf.reduce_sum(loss)
             self.cost = tf.reduce_mean(loss)
             self.final_state = state
 
@@ -156,13 +156,13 @@ class ClientModel(Model):
                 mask_by_seq.extend([dummy_mask for _ in range(num_dummy)])
 
             return data_x_by_seq, data_y_by_seq, mask_by_seq
-        
+
         data_x, data_y, data_mask = flatten_lists(data_x, data_y)
 
         for i in range(0, len(data_x), batch_size):
-            batched_x = data_x[i:i+batch_size]
-            batched_y = data_y[i:i+batch_size]
-            batched_mask = data_mask[i:i+batch_size]
+            batched_x = data_x[i:i + batch_size]
+            batched_y = data_y[i:i + batch_size]
+            batched_mask = data_mask[i:i + batch_size]
 
             input_data, input_lengths = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
@@ -175,11 +175,12 @@ class ClientModel(Model):
         fetches = {
             'cost': self.cost,
             'final_state': self.final_state,
+            'eval_metric_ops': self.eval_metric_ops
         }
-
+        nbatch = 0
+        tot_correct = 0
+        tot_loss = 0
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
-            tot_acc, tot_samples = 0, 0
-            tot_loss, tot_batches = 0, 0
 
             feed_dict = {
                 self.features: input_data,
@@ -197,43 +198,36 @@ class ClientModel(Model):
                 feed_dict[h] = state[i].h
 
             with self.graph.as_default():
-                _, vals, acc, loss = self.sess.run([self.train_op, fetches, self.eval_metric_ops, self.loss], feed_dict=feed_dict)
-            
+                _, vals = self.sess.run([self.train_op, fetches], feed_dict=feed_dict)
+            nbatch += 1
+            tot_correct += float(vals['eval_metric_ops'])
+            tot_loss += float(vals['cost'])
             state = vals['final_state']
-            tot_acc += acc
-            tot_samples += np.sum(input_lengths)
-
-            tot_loss += loss
-            tot_batches += 1
-
-        acc = float(tot_acc) / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
-        loss = tot_loss / tot_batches # the loss is already averaged over samples
-        return {'accuracy': acc, 'loss': loss}
+        return tot_correct / (nbatch * batch_size), tot_loss / nbatch
 
     def test(self, data, batch_size=5):
         tot_acc, tot_samples = 0, 0
         tot_loss, tot_batches = 0, 0
 
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
-
             with self.graph.as_default():
                 acc, loss = self.sess.run(
-                    [self.eval_metric_ops, self.loss], 
+                    [self.eval_metric_ops, self.loss],
                     feed_dict={
                         self.features: input_data,
                         self.labels: target_data,
-                        self.sequence_length_ph: input_lengths, 
+                        self.sequence_length_ph: input_lengths,
                         self.sequence_mask_ph: input_mask,
                     })
-            
+
             tot_acc += acc
             tot_samples += np.sum(input_lengths)
 
             tot_loss += loss
             tot_batches += 1
 
-        acc = float(tot_acc) / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
-        loss = tot_loss / tot_batches # the loss is already averaged over samples
+        acc = float(tot_acc) / tot_samples  # this top 1 accuracy considers every pred. of unknown and padding as wrong
+        loss = tot_loss / tot_batches  # the loss is already averaged over samples
         return {'accuracy': acc, 'loss': loss}
 
     def load_vocab(self):
@@ -242,4 +236,3 @@ class ClientModel(Model):
         vocab.update(vocab_file['vocab'])
 
         return vocab, vocab_file['size'], vocab_file['unk_symbol'], vocab_file['pad_symbol']
-

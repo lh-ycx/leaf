@@ -10,13 +10,14 @@ logger = L.get_logger()
 
 class Server:
     
-    def __init__(self, client_model, clients=[], cfg = None):
+    def __init__(self, client_model, clients=[], cfg=None,):
+        self._cur_time = 0      # simulation time
+        self.cfg = cfg
         self.client_model = client_model
         self.model = client_model.get_params()
         self.selected_clients = []
         self.all_clients = clients
         self.updates = []
-        self.cfg = cfg
 
     def select_clients(self, my_round, possible_clients, num_clients=20):
         """Selects num_clients clients randomly from possible_clients.
@@ -31,6 +32,9 @@ class Server:
             list of (num_train_samples, num_test_samples)
         """
         num_clients = min(num_clients, len(possible_clients))
+        if num_clients < self.cfg.min_selected:
+            logger.info('insufficient clients: need {} while get {} online'.format(self.cfg.min_selected, num_clients))
+            return False
         np.random.seed(my_round)
         self.selected_clients = np.random.choice(possible_clients, num_clients, replace=False)
 
@@ -78,7 +82,8 @@ class Server:
                 c.set_deadline(deadline)
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
-                simulate_time_c, comp, num_samples, update, acc, loss = c.train(num_epochs, batch_size, minibatch)
+                start_t = self.get_cur_time()
+                simulate_time_c, comp, num_samples, update, acc, loss = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
                 accs.append(acc)
@@ -94,15 +99,25 @@ class Server:
                 self.updates.append((c.id, num_samples, update))
                 logger.debug('client {} upload successfully!'.format(c.id))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
-                logger.debug('client {} failed: timeout!'.format(c.id))
+                logger.info('client {} failed: {}'.format(c.id, e))
                 simulate_time = deadline
             except Exception as e:
                 logger.error('client {} failed: {}'.format(c.id, e))
                 traceback.print_exc()
-        logger.info('simulation time: {}'.format(simulate_time))
-        avg_acc = sum(accs)/len(accs)
-        avg_loss = sum(losses)/len(losses)
-        logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
+        try:
+            logger.info('simulation time: {}'.format(simulate_time))
+            avg_acc = sum(accs)/len(accs)
+            avg_loss = sum(losses)/len(losses)
+            logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
+            logger.info('configuration and update stage simulation time: {}'.format(simulate_time))
+            sys_metrics['configuration_time'] = simulate_time
+        except ZeroDivisionError as e:
+            logger.error('training time window is too short to train!')
+            assert False
+        except Exception as e:
+            logger.error('failed reason: {}'.format(e))
+            traceback.print_exc()
+            assert False
         return sys_metrics
 
     def update_model(self, update_frac):
@@ -213,3 +228,12 @@ class Server:
 
     def close_model(self):
         self.client_model.close()
+    
+    def get_cur_time(self):
+        return self._cur_time
+
+    def pass_time(self, sec):
+        self._cur_time += sec
+    
+    def get_time_window(self):
+        return np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])

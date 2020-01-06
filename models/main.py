@@ -8,11 +8,12 @@ import random
 import time
 import eventlet
 import signal
+import traceback
 import tensorflow as tf
 
 import metrics.writer as metrics_writer
 
-config_name = 'reddit_FedAvg_1'     # dataset_aggregateAlgorithm_E
+config_name = 'reddit_SucFedAvg_1'     # dataset_aggregateAlgorithm_E
     
 # logger
 from utils.logger import Logger
@@ -87,14 +88,16 @@ def main():
     client_model = ClientModel(cfg.seed, *model_params, cfg.gpu_fraction)
 
     # Create clients
+    logger.info('======================Setup Clients==========================')
     clients = setup_clients(cfg, client_model)
     # print(sorted([c.num_train_samples for c in clients]))
+    
     # Create server
-    server = Server(client_model, clients, cfg = cfg)
+    server = Server(client_model, clients=clients, cfg = cfg)
     
     client_ids, client_groups, client_num_samples = server.get_clients_info(clients)
     
-    logger.info('Clients in Total: %d' % (len(clients)))
+    
 
     # Initial status
     logger.info('===================== Random Initialization =====================')
@@ -114,15 +117,25 @@ def main():
         os._exit(0)
     
     for i in range(num_rounds):
-        round_start_time = time.time()
+        # round_start_time = time.time()
         logger.info('===================== Round {} of {} ====================='.format(i+1, num_rounds))
-        
+
         # 1. selection stage
         logger.info('--------------------- selection stage ---------------------')
         # 1.1 select clients
-        server.select_clients(i, online(clients), num_clients=clients_per_round)
+        cur_time = server.get_cur_time()
+        time_window = server.get_time_window() 
+        logger.info('current time: {}\ttime window: {}\t'.format(cur_time, time_window))
+        if not server.select_clients(i, 
+                              online(clients, cur_time, time_window), 
+                              num_clients=clients_per_round):
+            # insufficient clients to select, round failed
+            logger.info('round failed in selection stage!')
+            server.pass_time(time_window)
+            continue
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
         logger.info("selected client_ids: {}".format(c_ids))
+        
         # 1.2 decide deadline for each client
         deadline = np.random.normal(cfg.round_ddl[0], cfg.round_ddl[1])
         while deadline <= 0:
@@ -130,11 +143,17 @@ def main():
         deadline = int(deadline)
         logger.info('selected deadline: {}'.format(deadline))
         
+        # 1.3 update simulation time
+        server.pass_time(time_window)
+        
         # 2. configuration stage
         logger.info('--------------------- configuration stage ---------------------')
         # 2.1 train(no parallel implementation)
         sys_metrics = server.train_model(num_epochs=cfg.num_epochs, batch_size=cfg.batch_size, minibatch=cfg.minibatch, deadline = deadline)
         sys_writer_fn(i + 1, c_ids, sys_metrics, c_groups, c_num_samples)
+        
+        # 2.2 update simulation time
+        server.pass_time(sys_metrics['configuration_time'])
         
         # 3. update stage
         logger.info('--------------------- report stage ---------------------')
@@ -142,7 +161,7 @@ def main():
         server.update_model(cfg.update_frac)
         
         # 3.2 total simulation time for this round
-        logger.info("simulating round {} used {} seconds".format(i+1, time.time()-round_start_time))
+        # logger.info("simulating round {} used {} seconds".format(i+1, time.time()-round_start_time))
         
         # 4. Test model(if necessary)
         if eval_every == -1:
@@ -166,16 +185,39 @@ def main():
     # Close models
     server.close_model()
 
-def online(clients):
-    """We assume all users are always online."""
-    return clients
+def online(clients, cur_time, time_window):
+    # """We assume all users are always online."""
+    # return online client according to client's timer
+    online_clients = []
+    for c in clients:
+        try:
+            if c.timer.ready(cur_time, time_window):
+                online_clients.append(c)
+        except Exception as e:
+            traceback.print_exc()
+    L = Logger()
+    logger = L.get_logger()
+    logger.info('{} of {} clients online'.format(len(online_clients), len(clients)))
+    return online_clients
 
 
 def create_clients(users, groups, train_data, test_data, model, cfg):
+    L = Logger()
+    logger = L.get_logger()
+    logger.info('Clients in Total: %d' % (len(users)))
     if len(groups) == 0:
         groups = [[] for _ in users]
     # clients = [Client(u, g, train_data[u], test_data[u], model, random.randint(0, 2), cfg) for u, g in zip(users, groups)]
-    clients = [Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg)) for u, g in zip(users, groups)]
+    # clients = [Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg)) for u, g in zip(users, groups)]
+    # TODO setting up clients is a little slow due to the import of timer
+    cnt = 0
+    clients = []
+    for u, g in zip(users, groups):
+        c = Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg))
+        clients.append(c)
+        cnt += 1
+        if cnt % 50 == 0:
+            logger.info('set up {} clients'.format(cnt))
     return clients
 
 

@@ -3,14 +3,20 @@ import warnings
 import timeout_decorator
 import sys
 import numpy as np
+import json
 
 from utils.logger import Logger
 from device import Device
+from timer import Timer
 
 L = Logger()
 logger = L.get_logger()
 
 class Client:
+    
+    d = None
+    with open('../data/user_behavior_tiny.json', 'r', encoding='utf-8') as f:
+        d = json.load(f)
     
     def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None):
         self._model = model
@@ -19,11 +25,20 @@ class Client:
         self.train_data = train_data
         self.eval_data = eval_data
         self.deadline = 1 # < 0 for unlimited
+        
         # TODO change upload time to upload spead (upload time = upload num / upload speed)
         self.device = device  # if device == none, it will use real time as train time and set upload time as 0
         if self.device == None:
             logger.warn('client {} with no device init, upload time will be set as 0 and speed will be the gpu spped'.format(self.id))
             self.upload_time = 0
+        
+        # timer
+        d = Client.d
+        uid = random.randint(0, len(d))
+        self.timer = Timer(ubt=d[str(uid)], google=True)
+        while self.timer.isSuccess != True:
+            uid = random.randint(0, len(d))
+            self.timer = Timer(ubt=d[str(uid)], google=True)
         
         '''
         # old implementation - every round with the same speed/upload time
@@ -61,7 +76,7 @@ class Client:
             self.speed = int(self.speed)      
         '''
 
-    def train(self, num_epochs=1, batch_size=10, minibatch=None):
+    def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
         """Trains on self.model using the client's train_data.
 
         Args:
@@ -69,6 +84,7 @@ class Client:
             batch_size: Size of training batches.
             minibatch: fraction of client's data to apply minibatch sgd,
                 None to use FedAvg
+            start_t: strat time of the training, only used in train_with_simulate_time
         Return:
             comp: number of FLOPs executed in training process
             num_samples: number of samples used in training
@@ -79,12 +95,19 @@ class Client:
         train_time_limit = self.get_train_time_limit()
         logger.debug('train_time_limit: {}'.format(train_time_limit))
         
-        def train_with_simulate_time(self, num_epochs=1, batch_size=10, minibatch=None):
+        def train_with_simulate_time(self, start_t, num_epochs=1, batch_size=10, minibatch=None):
             train_speed = self.device.get_speed()
             train_time = (len(self.train_data['y'])*num_epochs)/train_speed
-            logger.debug('clien {} train speed: {}, train time:{}'.format(self.id, train_speed, train_time))
+            upload_time = self.deadline - train_time_limit
+            available_time = self.timer.get_available_time(start_t, self.deadline)
+            logger.debug('client {} train speed: {}, train time:{}'.format(self.id, train_speed, train_time))
+            logger.info('client {} available time:{}'.format(self.id, available_time))
             if train_time > train_time_limit:
-                raise timeout_decorator.timeout_decorator.TimeoutError('timeout')
+                failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif train_time > available_time:
+                failed_reason = 'train_time({}) > available_time({})'.format(train_time, available_time)
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     data = self.train_data
@@ -124,7 +147,7 @@ class Client:
         if self.device == None:
             return train_with_real_time_limit(self, num_epochs, batch_size, minibatch)
         else:
-            return train_with_simulate_time(self, num_epochs, batch_size, minibatch)
+            return train_with_simulate_time(self, start_t, num_epochs, batch_size, minibatch)
 
     def test(self, set_to_use='test'):
         """Tests self.model on self.test_data.
