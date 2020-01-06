@@ -98,8 +98,8 @@ class Model(ABC):
             acc, loss = self.run_epoch(data, batch_size)
             tot_acc += acc
             tot_loss += loss
-            logger.info("epoch[{}/{}]: accuracy = {}, loss = {}".format(i + 1, num_epochs, acc, loss))
-        logger.info("end of {} epochs, accuracy = {}, loss = {}".format(num_epochs, tot_acc / num_epochs, tot_loss / num_epochs))
+            logger.debug("epoch[{}/{}]: accuracy = {}, loss = {}".format(i + 1, num_epochs, acc, loss))
+        logger.debug("end of {} epochs, accuracy = {}, loss = {}".format(num_epochs, tot_acc / num_epochs, tot_loss / num_epochs))
         update = self.get_params()
         comp = num_epochs * (len(data['y']) // batch_size) * batch_size * self.flops
         return comp, update, tot_acc/num_epochs, tot_loss/num_epochs

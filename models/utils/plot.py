@@ -12,15 +12,16 @@ from collections import defaultdict
 def plot_charge(file):
     img_dir = "../../data/img"
     fmt = '%Y-%m-%d %H:%M:%S'
-    reference_time = "2018-03-06 00:00:00"
+    reference_time = "2020-01-02 00:00:00"
     color = ['black', 'blue', 'green', 'yellow', 'red']
     state = ['battery_charged_off', 'battery_charged_on', 'battery_low', 'battery_okay', 'phone_off', 'phone_on', 'screen_off', 'screen_on', 'screen_unlock']
     with open(file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    a = list(range(len(data)))
+    # key_list = list(data.keys())
+    a = list(data.keys())
     random.shuffle(a)
-    fig_num = 10
-    fig_size = 40
+    fig_num = 3
+    fig_size = 50
     color = color * (fig_size // len(color) + 1)
     a = a[:fig_num * fig_size]
     for i in range(fig_num):
@@ -28,15 +29,15 @@ def plot_charge(file):
         for j in range(fig_size):
             start, end = None, None
             plot_j = False
-            message = data[str(a[i * fig_num + j])]['messages']
-            for s in state:
-                message = message.replace(s, "\t" + s + "\n")
-            message = message.replace('\x00', '').strip().split("\n")
+            message = data[str(a[i * fig_num + j])]['messages'].split("\n")
+            # for s in state:
+                # message = message.replace(s, "\t" + s + "\n")
+            # message = message.replace('\x00', '').strip().split("\n")
             for mes in message:
-                t, s = mes.strip().split("\t")
-                t = t.strip()
-                s = s.strip()
                 try:
+                    t, s = mes.strip().split("\t")
+                    t = t.strip()
+                    s = s.strip()
                     if s == 'battery_charged_on' and not start:
                         start = time.mktime(datetime.strptime(t, fmt).timetuple()) - time.mktime(datetime.strptime(reference_time, fmt).timetuple())
                     elif s == 'battery_charged_off' and start:
@@ -201,7 +202,9 @@ def static_ready_extend(google=True):
 
 
 if __name__ == '__main__':
-    static_ready_extend(True)
-    static_ready_extend(False)
-    plot_ready(True, True)
-    plot_ready(True, False)
+    # static_ready_extend(True)
+    # static_ready_extend(False)
+    # plot_ready(True, True)
+    # plot_ready(True, False)
+
+    plot_charge('/home/ubuntu/storage/ycx/trace_sample/zipped_guid2data.json')

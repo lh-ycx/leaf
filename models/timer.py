@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 import random
 import pandas as pd
+import traceback
 from utils.logger import Logger
 
 L = Logger()
@@ -13,7 +14,7 @@ class Timer:
     def __init__(self, ubt, google=True):
         self.isSuccess = False
         self.fmt = '%Y-%m-%d %H:%M:%S'
-        self.refer_time = '2018-03-06 08:00:00'
+        self.refer_time = '2020-01-02 00:00:00'
         self.refer_second = time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
         self.trace_start, self.trace_end = None, None
         self.ready_time = []
@@ -26,17 +27,69 @@ class Timer:
 
         # ### get ready time list ###
         start_charge, end_charge, okay, low = None, None, None, None
-        message = self.ubt['messages']
+        message = self.ubt['messages'].split('\n')
         ready_time = []
-        for s in self.state:
-            message = message.replace(s, "\t" + s + "\n")
-        message = message.replace('\x00', '').strip().split("\n")
+        # for s in self.state:
+            # message = message.replace(s, "\t" + s + "\n")
+        # message = message.replace('\x00', '').strip().split("\n")
         # get ready time
+        
+        idle = False # define: idle = locked
+        screen_off = False
+        locked = False 
+        wifi = False
+        charged = False
+        battery_level = 0.0
+        st = None   # ready start time
+        ed = None   # ready end time
         for mes in message:
-            t, s = mes.strip().split("\t")
-            t = t.strip()
-            s = s.strip()
+            if mes.strip() == '':
+                continue
             try:
+                t, s = mes.strip().split("\t")
+                t = t.strip()
+                s = s.strip()
+                s = s.lower()
+                if s == 'battery_charged_on':
+                    charged = True
+                elif s == 'battery_charged_off':
+                    charged = False
+                elif s == 'wifi':
+                    wifi = True
+                elif s == 'unknown' or s == '4g' or s == '3g' or s == '2g':
+                    wifi = False
+                elif s == 'screen_on':
+                    screen_off = False
+                elif s == 'screen_off':
+                    screen_off = True
+                elif s == 'screen_lock':
+                    locked = True
+                elif s == 'screen_unlock':
+                    locked = False
+                elif s[-1] == '%':
+                    battery_level = float(s[:-1])
+                else:
+                    logger.error('invalid trace state: {}'.format(s))
+                    idle = False # define: idle = locked
+                    screen_off = False
+                    locked = False 
+                    wifi = False
+                    charged = False
+                    battery_level = 0.0
+                    assert False
+                
+                # you can define your own 'idle' state
+                idle = locked
+                if idle and wifi and charged and st == None:
+                    st = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                         time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                if (st != None) and not (idle and wifi and charged):
+                    ed = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
+                         time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
+                    ready_time.append([st, ed])
+                    st, ed = None, None
+                
+                '''
                 if s == 'battery_charged_on' and not start_charge:
                     start_charge = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
                                    time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
@@ -55,8 +108,11 @@ class Timer:
                               time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
                         ready_time.append([okay, low])
                         okay, low = None, None
-            except ValueError:
-                logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
+                '''
+            except ValueError as e:
+                logger.debug('invalid trace for uid: {}'.format(self.ubt['guid']))
+                # traceback.print_exc()
+                # assert False
                 return
 
         # merge ready time
@@ -69,22 +125,30 @@ class Timer:
                 else:
                     self.ready_time.append(now)
                     now = a
+            self.ready_time.append(now)
         except (ValueError, IndexError):
-            logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
+            logger.debug('merge ready time error! invalid trace for uid: {}'.format(self.ubt['guid']))
+            # traceback.print_exc()
+            # assert False
             return
 
         # ### get trace start time and trace end time ###
         for mes in message:
             try:
                 t = mes.strip().split("\t")[0].strip()
+                if t == '':
+                    continue
                 sec = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - self.refer_second
                 if not self.trace_start:
                     self.trace_start = sec
                 self.trace_end = sec
             except ValueError:
-                logger.debug('invalid trace for uid: {}'.format(self.ubt['user_id']))
+                logger.debug('invalid trace for uid: {}'.format(self.ubt['guid']))
+                # traceback.print_exc()
+                # assert False
                 return
 
+        logger.debug('usr {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
         self.isSuccess = True
 
     def ready(self, round_start, time_window, reference=True):

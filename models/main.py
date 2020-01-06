@@ -134,7 +134,9 @@ def main():
             server.pass_time(time_window)
             continue
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
-        logger.info("selected client_ids: {}".format(c_ids))
+        logger.info("selected num: {}".format(len(c_ids)))
+        logger.debug("selected client_ids: {}".format(c_ids))
+        
         
         # 1.2 decide deadline for each client
         deadline = np.random.normal(cfg.round_ddl[0], cfg.round_ddl[1])

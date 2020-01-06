@@ -15,7 +15,7 @@ logger = L.get_logger()
 class Client:
     
     d = None
-    with open('../data/user_behavior_tiny.json', 'r', encoding='utf-8') as f:
+    with open('/home/ubuntu/storage/ycx/trace_sample/zipped_guid2data.json', 'r', encoding='utf-8') as f:
         d = json.load(f)
     
     def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None):
@@ -34,10 +34,11 @@ class Client:
         
         # timer
         d = Client.d
-        uid = random.randint(0, len(d))
+        # uid = random.randint(0, len(d))
+        uid = random.sample(list(d.keys()), 1)[0]
         self.timer = Timer(ubt=d[str(uid)], google=True)
         while self.timer.isSuccess != True:
-            uid = random.randint(0, len(d))
+            uid = random.sample(list(d.keys()), 1)[0]
             self.timer = Timer(ubt=d[str(uid)], google=True)
         
         '''
@@ -101,7 +102,7 @@ class Client:
             upload_time = self.deadline - train_time_limit
             available_time = self.timer.get_available_time(start_t, self.deadline)
             logger.debug('client {} train speed: {}, train time:{}'.format(self.id, train_speed, train_time))
-            logger.info('client {} available time:{}'.format(self.id, available_time))
+            logger.debug('client {} available time:{}'.format(self.id, available_time))
             if train_time > train_time_limit:
                 failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)

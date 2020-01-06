@@ -99,13 +99,13 @@ class Server:
                 self.updates.append((c.id, num_samples, update))
                 logger.debug('client {} upload successfully!'.format(c.id))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
-                logger.info('client {} failed: {}'.format(c.id, e))
+                logger.debug('client {} failed: {}'.format(c.id, e))
                 simulate_time = deadline
             except Exception as e:
                 logger.error('client {} failed: {}'.format(c.id, e))
                 traceback.print_exc()
         try:
-            logger.info('simulation time: {}'.format(simulate_time))
+            # logger.info('simulation time: {}'.format(simulate_time))
             avg_acc = sum(accs)/len(accs)
             avg_loss = sum(losses)/len(losses)
             logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
