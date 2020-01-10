@@ -18,7 +18,7 @@ class Client:
     with open('/home/ubuntu/storage/ycx/trace_sample/zipped_guid2data.json', 'r', encoding='utf-8') as f:
         d = json.load(f)
     
-    def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None):
+    def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None, cfg=None):
         self._model = model
         self.id = client_id # integer
         self.group = group
@@ -35,12 +35,16 @@ class Client:
         # timer
         d = Client.d
         # uid = random.randint(0, len(d))
-        uid = random.sample(list(d.keys()), 1)[0]
-        self.timer = Timer(ubt=d[str(uid)], google=True)
-        while self.timer.isSuccess != True:
+        if cfg.user_trace:
             uid = random.sample(list(d.keys()), 1)[0]
             self.timer = Timer(ubt=d[str(uid)], google=True)
-        
+            while self.timer.isSuccess != True:
+                uid = random.sample(list(d.keys()), 1)[0]
+                self.timer = Timer(ubt=d[str(uid)], google=True)
+        else:
+            
+            self.timer = Timer(None)
+
         '''
         # old implementation - every round with the same speed/upload time
         if device == 0:

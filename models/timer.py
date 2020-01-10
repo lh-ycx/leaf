@@ -5,6 +5,7 @@ import random
 import pandas as pd
 import traceback
 from utils.logger import Logger
+import sys
 
 L = Logger()
 logger = L.get_logger()
@@ -24,6 +25,10 @@ class Timer:
 
         # get marched ubt from user_behavior_tiny by uid
         self.ubt = ubt
+
+        if ubt == None: # no user trace will be used
+            self.isSuccess = True
+            return
 
         # ### get ready time list ###
         start_charge, end_charge, okay, low = None, None, None, None
@@ -159,6 +164,9 @@ class Timer:
         :param reference: if round_start a refer time or not
         :return: True if ready at round_start + time_window
         """
+        if self.ubt == None:
+            return True
+        
         if not reference:
             round_start -= self.refer_second
         now = int(round_start + time_window - self.trace_start) % (int(self.trace_end - self.trace_start)) + self.trace_start
@@ -176,6 +184,9 @@ class Timer:
         :return: time
         """
 
+        if self.ubt == None:
+            return sys.maxsize
+        
         def overlay(S, E, t0, t1):
             # overlay of [S, E] and [t0, t1]
             res = 0

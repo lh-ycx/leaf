@@ -43,6 +43,7 @@ MODEL_PARAMS = {
     'celeba.cnn': (0.1, 2), # lr, num_classes
     'synthetic.log_reg': (0.0003, 5, 60), # lr, num_classes, input_dim
     'reddit.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'reddit.new_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
 }
 """dict: Model specific parameter specification"""
 

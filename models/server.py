@@ -97,7 +97,7 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
-                logger.debug('client {} upload successfully!'.format(c.id))
+                logger.debug('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
                 logger.debug('client {} failed: {}'.format(c.id, e))
                 simulate_time = deadline
@@ -110,6 +110,7 @@ class Server:
             avg_loss = sum(losses)/len(losses)
             logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
             logger.info('configuration and update stage simulation time: {}'.format(simulate_time))
+            # logger.info('losses: {}'.format(losses))
             sys_metrics['configuration_time'] = simulate_time
         except ZeroDivisionError as e:
             logger.error('training time window is too short to train!')
@@ -149,11 +150,13 @@ class Server:
                 total_weight = 0.
                 base = [0] * len(self.updates[0][2])
                 for (cid, client_samples, client_model) in self.updates:
+                    # logger.info('cid: {}, client_samples: {}, client_model: {}'.format(cid, client_samples, client_model[0][0][:5]))
                     total_weight += client_samples
                     for i, v in enumerate(client_model):
                         base[i] += (client_samples * v.astype(np.float64))
                 averaged_soln = [v / total_weight for v in base]
                 self.model = averaged_soln
+
             elif self.cfg.aggregate_algorithm == 'SelFedAvg':
                 # aggregate the selected clients
                 logger.info('Aggragate with SelFedAvg')
@@ -180,6 +183,10 @@ class Server:
                 
         else:
             logger.info('round failed, global model maintained.')
+        
+        max_par = max(map(lambda x: x.max(), self.model))
+        min_par = min(map(lambda x: x.min(), self.model))
+        logger.info('max: {}, min: {}'.format(max_par, min_par))
         self.updates = []
 
     def test_model(self, clients_to_test, set_to_use='test'):
@@ -195,10 +202,12 @@ class Server:
 
         if clients_to_test is None:
             clients_to_test = self.selected_clients
+            assert False
 
         for client in clients_to_test:
             client.model.set_params(self.model)
             c_metrics = client.test(set_to_use)
+            # logger.info('client {} metrics: {}'.format(client.id, c_metrics))
             metrics[client.id] = c_metrics
         
         return metrics

@@ -19,7 +19,7 @@ logger = L.get_logger()
 class Model(ABC):
     init_cnt = 0
 
-    def __init__(self, seed, lr, optimizer=None, gpu_fraction=0.2):
+    def __init__(self, seed, lr, optimizer=None):
 
         self.lr = lr
         self.seed = seed
@@ -82,7 +82,6 @@ class Model(ABC):
     def train(self, data, num_epochs=1, batch_size=10):
         """
         Trains the client model.
-
         Args:
             data: Dict of the form {'x': [list], 'y': [list]}.
             num_epochs: Number of epochs to train.
@@ -92,36 +91,39 @@ class Model(ABC):
             update: List of np.ndarray weights, with each weight array
                 corresponding to a variable in the resulting graph
         """
+        '''
+        train_reslt = self.test(data)
+        acc = train_reslt[ACCURACY_KEY]
+        loss = train_reslt['loss']
+        logger.info('before: {}'.format(loss))
+        '''
         
-        tot_acc, tot_loss = 0, 0
         for i in range(num_epochs):
-            acc, loss = self.run_epoch(data, batch_size)
-            tot_acc += acc
-            tot_loss += loss
-            logger.debug("epoch[{}/{}]: accuracy = {}, loss = {}".format(i + 1, num_epochs, acc, loss))
-        logger.debug("end of {} epochs, accuracy = {}, loss = {}".format(num_epochs, tot_acc / num_epochs, tot_loss / num_epochs))
+            self.run_epoch(data, batch_size)
+
+        train_reslt = self.test(data)
+        acc = train_reslt[ACCURACY_KEY]
+        loss = train_reslt['loss']
+        
         update = self.get_params()
-        comp = num_epochs * (len(data['y']) // batch_size) * batch_size * self.flops
-        return comp, update, tot_acc/num_epochs, tot_loss/num_epochs
+        comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
+        return comp, update, acc, loss
 
     def run_epoch(self, data, batch_size):
-        nbatch = 0
-        tot_correct = 0
-        tot_loss = 0
-        for batched_x, batched_y in batch_data(data, batch_size):
+
+        for batched_x, batched_y in batch_data(data, batch_size, seed=self.seed):
+            
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
-            nbatch += 1
+            
             with self.graph.as_default():
-                _, correct, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
-                                                 feed_dict={
-                                                     self.features: input_data,
-                                                     self.labels: target_data
-                                                 })
-                tot_correct += float(correct)
-                tot_loss += float(loss)
-
-        return tot_correct / (nbatch * batch_size), tot_loss / nbatch
+                    _, tot_acc, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
+                    feed_dict={
+                        self.features: input_data,
+                        self.labels: target_data
+                    })
+        acc = float(tot_acc) / input_data.shape[0]
+        return {'acc': acc, 'loss': loss}
 
     def test(self, data):
         """

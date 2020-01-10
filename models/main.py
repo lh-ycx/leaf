@@ -13,7 +13,7 @@ import tensorflow as tf
 
 import metrics.writer as metrics_writer
 
-config_name = 'reddit_SucFedAvg_1'     # dataset_aggregateAlgorithm_E
+config_name = 'default'     # dataset_aggregateAlgorithm_E
     
 # logger
 from utils.logger import Logger
@@ -85,7 +85,7 @@ def main():
 
     # Create client model, and share params with server model
     tf.reset_default_graph()
-    client_model = ClientModel(cfg.seed, *model_params, cfg.gpu_fraction)
+    client_model = ClientModel(cfg.seed, *model_params)
 
     # Create clients
     logger.info('======================Setup Clients==========================')
@@ -134,8 +134,8 @@ def main():
             server.pass_time(time_window)
             continue
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
-        logger.info("selected num: {}".format(len(c_ids)))
-        logger.debug("selected client_ids: {}".format(c_ids))
+        logger.debug("selected num: {}".format(len(c_ids)))
+        logger.info("selected client_ids: {}".format(c_ids))
         
         
         # 1.2 decide deadline for each client
@@ -170,7 +170,7 @@ def main():
             continue
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
             logger.info('--------------------- test result ---------------------')
-            test_clients = random.sample(clients, 50)
+            test_clients = random.sample(clients, min(813,len(clients)))
             sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)
             logger.info('number of clients for test: {} of {} '.format(len(test_clients),len(clients)))
             another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
@@ -215,7 +215,7 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
     cnt = 0
     clients = []
     for u, g in zip(users, groups):
-        c = Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg))
+        c = Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg), cfg)
         clients.append(c)
         cnt += 1
         if cnt % 50 == 0:

@@ -33,6 +33,7 @@ class Config():
         self.small_speed = [50.0, 1.0]
         self.aggregate_algorithm = 'FedAvg'
         self.time_window = [20.0, 0.0]  # time window for selection stage
+        self.user_trace = False
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -93,6 +94,10 @@ class Config():
                         self.aggregate_algorithm = str(line[1])
                     elif line[0] == 'time_window':
                         self.time_window = [float(line[1]), float(line[2])]
+                    elif line[0] == 'user_trace' :
+                        self.user_trace = line[1].strip() == True
+                        if not self.user_trace:
+                            logger.info('no user trace will be used! assume client is availiable at any time.')
                 except Exception as e:
                     traceback.print_exc()
     
