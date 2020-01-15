@@ -153,7 +153,7 @@ class Timer:
                 # assert False
                 return
 
-        logger.debug('usr {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
+        logger.debug('user {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
         self.isSuccess = True
 
     def ready(self, round_start, time_window, reference=True):

@@ -26,6 +26,7 @@ class ClientModel(Model):
 
         # initialize vocabulary
         self.vocab, self.vocab_size, self.unk_symbol, self.pad_symbol = self.load_vocab()
+        print('vocab_size: {}'.format(self.vocab_size))
 
         self.initializer = tf.random_uniform_initializer(-init_scale, init_scale)
 

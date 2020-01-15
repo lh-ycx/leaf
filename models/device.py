@@ -61,3 +61,13 @@ class Device():
             upload_time = np.random.normal(self.upload_time_u, self.upload_time_sigma)
         return float(upload_time)
     
+    def get_train_time(self, num_sample, batch_size, num_epoch):
+        # TODO - finish train time predictor
+
+        # current implementation: 
+        # use real data withour prediction, 
+        # so now it does not support other models
+        if self.device_type == -1:
+            assert False
+        reddit_profile_data = [6.5, 4.1, 1.5]
+        return num_epoch * ((num_sample-1)//batch_size + 1) * reddit_profile_data[self.device_type]

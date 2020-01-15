@@ -17,6 +17,7 @@ class Config():
         self.eval_every = 3             # -1 for eval when quit
         self.clients_per_round = 10
         self.min_selected = 10
+        self.max_sample = 100           # max sample num for training in a round
         self.batch_size = 10
         self.seed = 0
         self.metrics_file = 'metrics'
@@ -34,6 +35,7 @@ class Config():
         self.aggregate_algorithm = 'FedAvg'
         self.time_window = [20.0, 0.0]  # time window for selection stage
         self.user_trace = False
+        self.no_training = False
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -95,9 +97,15 @@ class Config():
                     elif line[0] == 'time_window':
                         self.time_window = [float(line[1]), float(line[2])]
                     elif line[0] == 'user_trace' :
-                        self.user_trace = line[1].strip() == True
+                        self.user_trace = line[1].strip() == 'True'
                         if not self.user_trace:
                             logger.info('no user trace will be used! assume client is availiable at any time.')
+                    elif line[0] == 'no_training' :
+                        self.no_training = line[1].strip() == 'True'
+                        if self.no_training:
+                            logger.info('no actual training process')
+                    elif line[0] == 'max_sample' :
+                        self.max_sample = int(line[1])
                 except Exception as e:
                     traceback.print_exc()
     

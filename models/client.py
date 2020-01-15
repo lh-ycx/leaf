@@ -25,6 +25,7 @@ class Client:
         self.train_data = train_data
         self.eval_data = eval_data
         self.deadline = 1 # < 0 for unlimited
+        self.cfg = cfg
         
         # TODO change upload time to upload spead (upload time = upload num / upload speed)
         self.device = device  # if device == none, it will use real time as train time and set upload time as 0
@@ -42,44 +43,7 @@ class Client:
                 uid = random.sample(list(d.keys()), 1)[0]
                 self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
-            
             self.timer = Timer(None)
-
-        '''
-        # old implementation - every round with the same speed/upload time
-        if device == 0:
-            self.upload_time = np.random.normal(cfg.small_upload_time[0], cfg.small_upload_time[1])
-            while self.upload_time <= 0:
-                self.upload_time = np.random.normal(cfg.small_upload_time[0], cfg.small_upload_time[1])
-            self.upload_time = int(self.upload_time)
-            
-            self.speed = np.random.normal(cfg.small_speed[0], cfg.small_speed[1])
-            while self.speed <= 0:
-                self.speed = np.random.normal(cfg.small_speed[0], cfg.small_speed[1])
-            self.speed = int(self.speed)
-        
-        elif device == 1:
-            self.upload_time = np.random.normal(cfg.mid_upload_time[0], cfg.mid_upload_time[1])
-            while self.upload_time <= 0:
-                self.upload_time = np.random.normal(cfg.mid_upload_time[0], cfg.mid_upload_time[1])
-            self.upload_time = int(self.upload_time)
-            
-            self.speed = np.random.normal(cfg.mid_speed[0], cfg.mid_speed[1])
-            while self.speed <= 0:
-                self.speed = np.random.normal(cfg.mid_speed[0], cfg.mid_speed[1])
-            self.speed = int(self.speed)
-            
-        elif device == 2:
-            self.upload_time = np.random.normal(cfg.big_upload_time[0], cfg.big_upload_time[1])
-            while self.upload_time <= 0:
-                self.upload_time = np.random.normal(cfg.big_upload_time[0], cfg.big_upload_time[1])
-            self.upload_time = int(self.upload_time)  
-            
-            self.speed = np.random.normal(cfg.big_speed[0], cfg.big_speed[1])
-            while self.speed <= 0:
-                self.speed = np.random.normal(cfg.big_speed[0], cfg.big_speed[1])
-            self.speed = int(self.speed)      
-        '''
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
         """Trains on self.model using the client's train_data.
@@ -101,11 +65,19 @@ class Client:
         logger.debug('train_time_limit: {}'.format(train_time_limit))
         
         def train_with_simulate_time(self, start_t, num_epochs=1, batch_size=10, minibatch=None):
-            train_speed = self.device.get_speed()
-            train_time = (len(self.train_data['y'])*num_epochs)/train_speed
+            if minibatch is None:
+                num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
+            else :
+                frac = min(1.0, minibatch)
+                num_data = max(1, int(frac*len(self.train_data["x"])))
+            
+            # train_speed = self.device.get_speed()
+            # train_time = (len(self.train_data['y'])*num_epochs)/train_speed
+            # TODO finish device - use a regression model to predict the training time
+            train_time = self.device.get_train_time(num_data, batch_size, num_epochs) # num_sample, batch_size, num_epoch
             upload_time = self.deadline - train_time_limit
             available_time = self.timer.get_available_time(start_t, self.deadline)
-            logger.debug('client {} train speed: {}, train time:{}'.format(self.id, train_speed, train_time))
+            logger.debug('client {}: train time:{}'.format(self.id, train_time))
             logger.debug('client {} available time:{}'.format(self.id, available_time))
             if train_time > train_time_limit:
                 failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
@@ -115,8 +87,14 @@ class Client:
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
-                    data = self.train_data
-                    comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                    # data = self.train_data
+                    num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
+                    xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
+                    data = {'x': xs, 'y': ys}
+                    if self.cfg.no_training:
+                        comp, update, acc, loss = -1,-1,-1,-1
+                    else:
+                        comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
                 else:
                     frac = min(1.0, minibatch)
                     num_data = max(1, int(frac*len(self.train_data["x"])))
@@ -125,7 +103,10 @@ class Client:
 
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
-                    comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                    if self.cfg.no_training:
+                        comp, update, acc, loss = -1,-1,-1,-1
+                    else:
+                        comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + self.upload_time
                 return simulate_time_c, comp, num_train_samples, update, acc, loss
@@ -134,8 +115,14 @@ class Client:
         def train_with_real_time_limit(self, num_epochs=1, batch_size=10, minibatch=None):
             start_time = time.time()
             if minibatch is None:
-                data = self.train_data
-                comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                # data = self.train_data
+                num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
+                xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
+                data = {'x': xs, 'y': ys}
+                if self.cfg.no_training:
+                    comp, update, acc, loss = -1,-1,-1,-1
+                else:
+                    comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
             else:
                 frac = min(1.0, minibatch)
                 num_data = max(1, int(frac*len(self.train_data["x"])))
@@ -144,7 +131,10 @@ class Client:
 
                 # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                 num_epochs = 1
-                comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                if self.cfg.no_training:
+                    comp, update, acc, loss = -1,-1,-1,-1
+                else:
+                    comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
             num_train_samples = len(data['y'])
             simulate_time_c = time.time() - start_time
             return simulate_time_c, comp, num_train_samples, update, acc, loss
@@ -241,4 +231,4 @@ class Client:
         if self.upload_time < self.deadline :
             return self.deadline - self.upload_time
         else:
-            return 1
+            return 0.01

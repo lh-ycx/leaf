@@ -91,6 +91,8 @@ def main():
     logger.info('======================Setup Clients==========================')
     clients = setup_clients(cfg, client_model)
     # print(sorted([c.num_train_samples for c in clients]))
+
+    attended_clients = set()
     
     # Create server
     server = Server(client_model, clients=clients, cfg = cfg)
@@ -134,8 +136,10 @@ def main():
             server.pass_time(time_window)
             continue
         c_ids, c_groups, c_num_samples = server.get_clients_info(server.selected_clients)
-        logger.debug("selected num: {}".format(len(c_ids)))
-        logger.info("selected client_ids: {}".format(c_ids))
+        attended_clients.update(c_ids)
+        c_ids.sort()
+        logger.info("selected num: {}".format(len(c_ids)))
+        logger.debug("selected client_ids: {}".format(c_ids))
         
         
         # 1.2 decide deadline for each client
@@ -168,7 +172,12 @@ def main():
         # 4. Test model(if necessary)
         if eval_every == -1:
             continue
+        
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
+            logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
+            logger.info('attended_clients: {}'.format(attended_clients))
+            if cfg.no_training:
+                continue
             logger.info('--------------------- test result ---------------------')
             test_clients = random.sample(clients, min(813,len(clients)))
             sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)

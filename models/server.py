@@ -85,6 +85,7 @@ class Server:
                 start_t = self.get_cur_time()
                 simulate_time_c, comp, num_samples, update, acc, loss = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
+                logger.debug('client {} num_samples: {}'.format(c.id, num_samples))
                 logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
                 accs.append(acc)
                 losses.append(loss)
@@ -106,15 +107,15 @@ class Server:
                 traceback.print_exc()
         try:
             # logger.info('simulation time: {}'.format(simulate_time))
+            sys_metrics['configuration_time'] = simulate_time
             avg_acc = sum(accs)/len(accs)
             avg_loss = sum(losses)/len(losses)
             logger.info('average acc: {}, average loss: {}'.format(avg_acc, avg_loss))
             logger.info('configuration and update stage simulation time: {}'.format(simulate_time))
             # logger.info('losses: {}'.format(losses))
-            sys_metrics['configuration_time'] = simulate_time
         except ZeroDivisionError as e:
             logger.error('training time window is too short to train!')
-            assert False
+            # assert False
         except Exception as e:
             logger.error('failed reason: {}'.format(e))
             traceback.print_exc()
@@ -125,6 +126,10 @@ class Server:
         logger.info('{} of {} clients upload successfully'.format(len(self.updates), len(self.selected_clients)))
         if len(self.updates) / len(self.selected_clients) >= update_frac:        
             logger.info('round succeed, updating global model...')
+            if self.cfg.no_training:
+                logger.info('pseduo-update because of no_training setting.')
+                self.updates = []
+                return
             if self.cfg.aggregate_algorithm == 'FedAvg':
                 # aggregate all the clients
                 logger.info('Aggragate with FedAvg')
@@ -156,7 +161,6 @@ class Server:
                         base[i] += (client_samples * v.astype(np.float64))
                 averaged_soln = [v / total_weight for v in base]
                 self.model = averaged_soln
-
             elif self.cfg.aggregate_algorithm == 'SelFedAvg':
                 # aggregate the selected clients
                 logger.info('Aggragate with SelFedAvg')
@@ -184,9 +188,6 @@ class Server:
         else:
             logger.info('round failed, global model maintained.')
         
-        max_par = max(map(lambda x: x.max(), self.model))
-        min_par = min(map(lambda x: x.min(), self.model))
-        logger.info('max: {}, min: {}'.format(max_par, min_par))
         self.updates = []
 
     def test_model(self, clients_to_test, set_to_use='test'):
