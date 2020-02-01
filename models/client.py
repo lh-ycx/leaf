@@ -15,7 +15,7 @@ logger = L.get_logger()
 class Client:
     
     d = None
-    with open('/home/ubuntu/storage/ycx/trace_sample/zipped_guid2data.json', 'r', encoding='utf-8') as f:
+    with open('/home/ubuntu/storage/ycx/final_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
         d = json.load(f)
     
     def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None, cfg=None):
@@ -232,3 +232,41 @@ class Client:
             return self.deadline - self.upload_time
         else:
             return 0.01
+    
+
+    def upload_suc(self, start_t, num_epochs=1, batch_size=10, minibatch=None):
+        """Test if this client will upload successfully
+
+        Args:
+            num_epochs: Number of epochs to train. Unsupported if minibatch is provided (minibatch has only 1 epoch)
+            batch_size: Size of training batches.
+            minibatch: fraction of client's data to apply minibatch sgd,
+                None to use FedAvg
+            start_t: strat time of the training, only used in train_with_simulate_time
+        Return:
+            result: test result(True or False)
+        """
+        train_time_limit = self.get_train_time_limit()
+        logger.debug('train_time_limit: {}'.format(train_time_limit))
+        if minibatch is None:
+            num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
+        else :
+            frac = min(1.0, minibatch)
+            num_data = max(1, int(frac*len(self.train_data["x"])))
+        
+        train_time = self.device.get_train_time(num_data, batch_size, num_epochs) # num_sample, batch_size, num_epoch
+        upload_time = self.deadline - train_time_limit
+        available_time = self.timer.get_available_time(start_t, self.deadline)
+        logger.debug('client {}: train time:{}'.format(self.id, train_time))
+        logger.debug('client {} available time:{}'.format(self.id, available_time))
+        if train_time > train_time_limit:
+            failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
+            logger.debug('client {} fail with reason {}'.format(self.id, failed_reason))
+            return False
+        elif train_time > available_time:
+            failed_reason = 'train_time({}) > available_time({})'.format(train_time, available_time)
+            logger.debug('client {} fail with reason {}'.format(self.id, failed_reason))
+            return False
+        else:
+            return True
+        

@@ -13,7 +13,7 @@ import tensorflow as tf
 
 import metrics.writer as metrics_writer
 
-config_name = 'default'     # dataset_aggregateAlgorithm_E
+config_name = 'no_training'     # dataset_aggregateAlgorithm_E
     
 # logger
 from utils.logger import Logger
@@ -128,8 +128,9 @@ def main():
         cur_time = server.get_cur_time()
         time_window = server.get_time_window() 
         logger.info('current time: {}\ttime window: {}\t'.format(cur_time, time_window))
+        online_clients = online(clients, cur_time, time_window)
         if not server.select_clients(i, 
-                              online(clients, cur_time, time_window), 
+                              online_clients, 
                               num_clients=clients_per_round):
             # insufficient clients to select, round failed
             logger.info('round failed in selection stage!')
@@ -151,6 +152,14 @@ def main():
         
         # 1.3 update simulation time
         server.pass_time(time_window)
+        
+        # 1.3.1 show how many clients will upload successfully
+        suc_c = 0
+        for c in online_clients:
+            c.set_deadline(deadline)
+            if c.upload_suc(server.get_cur_time(), num_epochs=cfg.num_epochs, batch_size=cfg.batch_size, minibatch=cfg.minibatch):
+                suc_c += 1
+        logger.info('{} clients will upload successfully at most'.format(suc_c))
         
         # 2. configuration stage
         logger.info('--------------------- configuration stage ---------------------')
@@ -296,12 +305,12 @@ def print_metrics(metrics, weights, prefix=''):
     logger = L.get_logger()
     for metric in metric_names:
         ordered_metric = [metrics[c][metric] for c in client_ids]
-        logger.info('%s: %g, 10th percentile: %g, 50th percentile: %g, 90th percentile %g' \
-              % (prefix + metric,
-                 np.average(ordered_metric, weights=ordered_weights),
-                 np.percentile(ordered_metric, 10),
-                 np.percentile(ordered_metric, 50),
-                 np.percentile(ordered_metric, 90)))
+        logger.info('{}: {}, 10th percentile: {}, 50th percentile: {}, 90th percentile {}'.format
+                (prefix + metric,
+                 np.average(ordered_metric, weights=ordered_weights, axis = 0),
+                 np.percentile(ordered_metric, 10, axis=0),
+                 np.percentile(ordered_metric, 50, axis=0),
+                 np.percentile(ordered_metric, 90, axis=0)))
         # print(prefix + metric)
         # for i in range(len(client_ids)):
         #     print("client_id = {}, weight = {}, {} = {}".format(client_ids[i], ordered_weights[i], prefix + metric, ordered_metric[i]))

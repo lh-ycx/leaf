@@ -58,10 +58,14 @@ class ClientModel(Model):
             
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
 
-            # correct predictions
+            # correct top 3 predictions
             labels_reshaped = tf.reshape(labels, [-1])
             pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            top3_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 3)
+            top5_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 5)
             correct_pred = tf.cast(tf.equal(pred, labels_reshaped), tf.int32)
+            top3_correct_pred = tf.cast(top3_pred, tf.int32)
+            top5_correct_pred = tf.cast(top5_pred, tf.int32)
             
             # predicting unknown is always considered wrong
             unk_tensor = tf.fill(tf.shape(labels_reshaped), self.unk_symbol)
@@ -95,7 +99,9 @@ class ClientModel(Model):
                 zip(grads, tvars),
                 global_step=tf.train.get_or_create_global_step())
 
-            eval_metric_ops = tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad)
+            eval_metric_ops = [ tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
+                                tf.count_nonzero(top3_correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
+                                tf.count_nonzero(top5_correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad) ]
 
         return features, labels, train_op, eval_metric_ops, self.cost
 
@@ -201,7 +207,9 @@ class ClientModel(Model):
             state = vals['final_state']
 
     def test(self, data, batch_size=5):
-        tot_acc, tot_samples = 0, 0
+        # tot_acc, tot_samples = 0, 0
+        tot_acc = np.array([0.0,0.0,0.0],dtype=float)
+        tot_samples = 0
         tot_loss, tot_batches = 0, 0
 
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
@@ -222,7 +230,7 @@ class ClientModel(Model):
             tot_loss += loss
             tot_batches += 1
 
-        acc = float(tot_acc) / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
+        acc = tot_acc / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
         loss = tot_loss / tot_batches # the loss is already averaged over samples
         return {'accuracy': acc, 'loss': loss}
 
