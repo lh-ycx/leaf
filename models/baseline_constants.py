@@ -31,6 +31,11 @@ MAIN_PARAMS = {
         'medium': (8, 2, 2),
         'large': (20, 1, 2)
         },
+    'big_reddit': {
+        'small': (6, 2, 2),
+        'medium': (8, 2, 2),
+        'large': (20, 1, 2)
+        },
 }
 """dict: Specifies execution parameters (tot_num_rounds, eval_every_num_rounds, clients_per_round)"""
 
@@ -44,6 +49,8 @@ MODEL_PARAMS = {
     'synthetic.log_reg': (0.0003, 5, 60), # lr, num_classes, input_dim
     'reddit.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
     'reddit.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'big_reddit.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'big_reddit.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
 }
 """dict: Model specific parameter specification"""
 

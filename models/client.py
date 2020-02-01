@@ -27,7 +27,6 @@ class Client:
         self.deadline = 1 # < 0 for unlimited
         self.cfg = cfg
         
-        # TODO change upload time to upload spead (upload time = upload num / upload speed)
         self.device = device  # if device == none, it will use real time as train time and set upload time as 0
         if self.device == None:
             logger.warn('client {} with no device init, upload time will be set as 0 and speed will be the gpu spped'.format(self.id))
@@ -44,6 +43,11 @@ class Client:
                 self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
             self.timer = Timer(None)
+        
+        real_device_model = self.timer.model
+        if self.device is not None:
+            self.device.set_device_model(real_device_model)
+
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
         """Trains on self.model using the client's train_data.
@@ -269,4 +273,10 @@ class Client:
             return False
         else:
             return True
+
+    
+    def get_device_model(self):
+        if self.device == None:
+            return 'None'
+        return self.device.device_model
         

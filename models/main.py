@@ -10,10 +10,11 @@ import eventlet
 import signal
 import traceback
 import tensorflow as tf
+from collections import defaultdict
 
 import metrics.writer as metrics_writer
 
-config_name = 'no_training'     # dataset_aggregateAlgorithm_E
+config_name = 'default'     # dataset_aggregateAlgorithm_E
     
 # logger
 from utils.logger import Logger
@@ -233,11 +234,15 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
     cnt = 0
     clients = []
     for u, g in zip(users, groups):
-        c = Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg), cfg)
+        c = Client(u, g, train_data[u], test_data[u], model, Device(cfg), cfg)
         clients.append(c)
         cnt += 1
         if cnt % 50 == 0:
             logger.info('set up {} clients'.format(cnt))
+    model2cnt = defaultdict(int)
+    for c in clients:
+        model2cnt[c.get_device_model()] += 1
+    logger.info('device setup result: {}'.format(model2cnt))
     return clients
 
 

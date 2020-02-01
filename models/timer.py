@@ -28,7 +28,10 @@ class Timer:
 
         if ubt == None: # no user trace will be used
             self.isSuccess = True
+            self.model = None
             return
+        
+        self.model = ubt['model']
 
         # ### get ready time list ###
         start_charge, end_charge, okay, low = None, None, None, None

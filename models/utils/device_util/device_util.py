@@ -20,8 +20,8 @@ class Device_Util:
                 self.supported_devices = json.load(f)
                 self.supported_score = [self.benchmark2score[device] for device in self.supported_devices]
                 self.supported_rank = [list(self.benchmark2score).index(device) for device in self.supported_devices]
-                print('supported_score: {}'.format(self.supported_score))
-                print('supported_rank: {}'.format(self.supported_rank))
+                # print('supported_score: {}'.format(self.supported_score))
+                # print('supported_rank: {}'.format(self.supported_rank))
 
         except Exception as e:
             traceback.print_exc()
@@ -104,6 +104,21 @@ class Device_Util:
                 res: True for support and vice versa
         '''
         return real_device in self.real2benchmark and 'unknown' not in self.real2benchmark[real_device]
+    
+    def get_train_time(self, model, num_sample, batch_size, num_epoch):
+        '''
+            return the training time using look up table
+            Args:
+                model: device model(should be supported)
+                num_sample: number of samples
+                batch_size: batch size
+                num_epoch: number of epoches
+        '''
+
+        # TODO - finish look up table
+        reddit_profile_data = [6.5, 4.1, 1.5]
+        ii = self.supported_devices.index(model)
+        return num_epoch * ((num_sample-1)//batch_size + 1) * reddit_profile_data[ii]
 
 
 if __name__ == "__main__":

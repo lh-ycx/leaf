@@ -10,7 +10,7 @@ from reddit_utils import RedditComment
 
 
 NUM_USERS = 100000
-MAX_REPEATS = 1
+MAX_REPEATS = 10
 
 FILE = '../RC_2017-12'
 SUBS_TO_REMOVE = ['AskReddit', 'ImagesOfNetwork']

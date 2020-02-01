@@ -26,12 +26,18 @@ class Config():
         self.minibatch = None       # always None for FedAvg
         self.round_ddl = [1000, 0]
         self.update_frac = 0.5
+        '''
         self.big_upload_time = [5.0, 1.0]
         self.mid_upload_time = [10.0, 1.0]
         self.small_upload_time = [15.0, 1.0]
+        '''
+        self.upload_time = [10.0, 1.0]  # assume that upload time is influenced by network condition
+        '''
+        # speed is no more used and replaced by training time provided by device_util
         self.big_speed = [150.0, 1.0]
         self.mid_speed = [100.0, 1.0]
-        self.small_speed = [50.0, 1.0]
+        self.small_speed = [50.0, 1.0]  
+        '''
         self.aggregate_algorithm = 'FedAvg'
         self.time_window = [20.0, 0.0]  # time window for selection stage
         self.user_trace = False
@@ -80,18 +86,8 @@ class Config():
                         self.round_ddl = [float(line[1]), float(line[2])]
                     elif line[0] == 'update_frac':
                         self.update_frac = float(line[1])
-                    elif line[0] == 'big_upload_time':
-                        self.big_upload_time = [float(line[1]), float(line[2])]
-                    elif line[0] == 'mid_upload_time':
-                        self.mid_upload_time = [float(line[1]), float(line[2])]
-                    elif line[0] == 'small_upload_time':
-                        self.small_upload_time = [float(line[1]), float(line[2])]
-                    elif line[0] == 'big_speed':
-                        self.big_speed = [float(line[1]), float(line[2])]
-                    elif line[0] == 'mid_speed':
-                        self.mid_speed = [float(line[1]), float(line[2])]
-                    elif line[0] == 'small_speed':
-                        self.small_speed = [float(line[1]), float(line[2])]
+                    elif line[0] == 'upload_time':
+                        self.upload_time = [float(line[1]), float(line[2])]
                     elif line[0] == 'aggregate_algorithm':
                         self.aggregate_algorithm = str(line[1])
                     elif line[0] == 'time_window':
