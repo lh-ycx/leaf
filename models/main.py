@@ -14,7 +14,7 @@ from collections import defaultdict
 
 import metrics.writer as metrics_writer
 
-config_name = 'default'     # dataset_aggregateAlgorithm_E
+config_name = 'no_training'     # dataset_aggregateAlgorithm_E
     
 # logger
 from utils.logger import Logger
