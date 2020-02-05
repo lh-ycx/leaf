@@ -185,7 +185,7 @@ def main():
         
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
             logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
-            logger.info('attended_clients: {}'.format(attended_clients))
+            # logger.info('attended_clients: {}'.format(attended_clients))
             if cfg.no_training:
                 continue
             logger.info('--------------------- test result ---------------------')
@@ -239,6 +239,8 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
         cnt += 1
         if cnt % 50 == 0:
             logger.info('set up {} clients'.format(cnt))
+    from timer import Timer
+    Timer.save_cache()
     model2cnt = defaultdict(int)
     for c in clients:
         model2cnt[c.get_device_model()] += 1

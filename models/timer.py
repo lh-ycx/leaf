@@ -6,12 +6,34 @@ import pandas as pd
 import traceback
 from utils.logger import Logger
 import sys
+import os
 
 L = Logger()
 logger = L.get_logger()
 
 
 class Timer:
+
+    '''
+        cached_timers format:
+        {"guid_1": {"isSuccess": True, "trace_start": xx, "trace_end": xx, "ready_time": []}, 
+         "guid_2": {...}, ...}
+    '''
+    try:
+        update_cnt = 0
+        with open('cached_timers.json','r') as f:
+            cached_timers = json.load(f)
+    except Exception as e:
+        cached_timers = {}
+        update_cnt = 0
+        logger.warn('no cached timer is found, build from scratch')
+        # traceback.print_exc()
+    
+    def save_cache():
+        with open('cached_timers.json','w') as f:
+            json.dump(Timer.cached_timers, f, indent=2)
+            logger.info("Timer cached in cached_timers.json")
+
     def __init__(self, ubt, google=True):
         self.isSuccess = False
         self.fmt = '%Y-%m-%d %H:%M:%S'
@@ -32,7 +54,19 @@ class Timer:
             return
         
         self.model = ubt['model']
+        self.guid = ubt['guid']
 
+        # build from cache and no need to update the cache
+        if Timer.cached_timers is not None:
+            if self.guid in Timer.cached_timers:
+                self.isSuccess = Timer.cached_timers[self.guid]['isSuccess']
+                self.trace_start = Timer.cached_timers[self.guid]['trace_start']
+                self.trace_end = Timer.cached_timers[self.guid]['trace_end']
+                self.ready_time = Timer.cached_timers[self.guid]['ready_time']
+                return
+
+        # build from scrach and update cache
+        Timer.update_cnt += 1
         # ### get ready time list ###
         start_charge, end_charge, okay, low = None, None, None, None
         message = self.ubt['messages'].split('\n')
@@ -64,7 +98,7 @@ class Timer:
                     charged = False
                 elif s == 'wifi':
                     wifi = True
-                elif s == 'unknown' or s == '4g' or s == '3g' or s == '2g':
+                elif s == 'unknown' or s == '4g' or s == '3g' or s == '2g' or s == '5g':
                     wifi = False
                 elif s == 'screen_on':
                     screen_off = False
@@ -121,6 +155,13 @@ class Timer:
                 logger.debug('invalid trace for uid: {}'.format(self.ubt['guid']))
                 # traceback.print_exc()
                 # assert False
+                Timer.cached_timers[self.guid] = {}
+                Timer.cached_timers[self.guid]['isSuccess'] = self.isSuccess
+                Timer.cached_timers[self.guid]['trace_start'] = self.trace_start
+                Timer.cached_timers[self.guid]['trace_end'] = self.trace_end
+                Timer.cached_timers[self.guid]['ready_time'] = self.ready_time 
+                if Timer.update_cnt % 500 == 0:
+                    Timer.save_cache()
                 return
 
         # merge ready time
@@ -138,6 +179,13 @@ class Timer:
             logger.debug('merge ready time error! invalid trace for uid: {}'.format(self.ubt['guid']))
             # traceback.print_exc()
             # assert False
+            Timer.cached_timers[self.guid] = {}
+            Timer.cached_timers[self.guid]['isSuccess'] = self.isSuccess
+            Timer.cached_timers[self.guid]['trace_start'] = self.trace_start
+            Timer.cached_timers[self.guid]['trace_end'] = self.trace_end
+            Timer.cached_timers[self.guid]['ready_time'] = self.ready_time
+            if Timer.update_cnt % 500 == 0:
+                Timer.save_cache()
             return
 
         # ### get trace start time and trace end time ###
@@ -154,10 +202,24 @@ class Timer:
                 logger.debug('invalid trace for uid: {}'.format(self.ubt['guid']))
                 # traceback.print_exc()
                 # assert False
+                Timer.cached_timers[self.guid] = {}
+                Timer.cached_timers[self.guid]['isSuccess'] = self.isSuccess
+                Timer.cached_timers[self.guid]['trace_start'] = self.trace_start
+                Timer.cached_timers[self.guid]['trace_end'] = self.trace_end
+                Timer.cached_timers[self.guid]['ready_time'] = self.ready_time
+                if Timer.update_cnt % 500 == 0:
+                    Timer.save_cache()
                 return
 
         logger.debug('user {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
         self.isSuccess = True
+        Timer.cached_timers[self.guid] = {}
+        Timer.cached_timers[self.guid]['isSuccess'] = self.isSuccess
+        Timer.cached_timers[self.guid]['trace_start'] = self.trace_start
+        Timer.cached_timers[self.guid]['trace_end'] = self.trace_end
+        Timer.cached_timers[self.guid]['ready_time'] = self.ready_time 
+        if Timer.update_cnt % 500 == 0:
+            Timer.save_cache()
 
     def ready(self, round_start, time_window, reference=True):
         """
