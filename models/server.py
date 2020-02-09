@@ -2,6 +2,8 @@ import numpy as np
 import timeout_decorator
 import traceback
 from utils.logger import Logger
+from collections import defaultdict
+import json
 
 from baseline_constants import BYTES_WRITTEN_KEY, BYTES_READ_KEY, LOCAL_COMPUTATIONS_KEY
 
@@ -18,6 +20,7 @@ class Server:
         self.selected_clients = []
         self.all_clients = clients
         self.updates = []
+        self.client2cnt = defaultdict(int)
 
     def select_clients(self, my_round, possible_clients, num_clients=20):
         """Selects num_clients clients randomly from possible_clients.
@@ -98,6 +101,11 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
+                norm_comp = int(comp/self.client_model.flops)
+                if norm_comp == 0:
+                    logger.error('comp: {}, flops: {}'.format(comp, self.client_model.flops))
+                    assert False
+                self.client2cnt[str(c.id)] += norm_comp
                 logger.debug('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
                 logger.debug('client {} failed: {}'.format(c.id, e))
@@ -247,3 +255,8 @@ class Server:
     
     def get_time_window(self):
         return np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+    
+    def save_client2cnt(self):
+        with open('client2cnt.json', 'w') as f:
+            json.dump(self.client2cnt, f)
+        logger.info('save client2cnt.json.')

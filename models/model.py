@@ -5,6 +5,7 @@ import numpy as np
 import os
 import sys
 import tensorflow as tf
+import math
 
 from baseline_constants import ACCURACY_KEY
 
@@ -106,7 +107,7 @@ class Model(ABC):
         loss = train_reslt['loss']
         
         update = self.get_params()
-        comp = num_epochs * (len(data['y'])//batch_size) * batch_size * self.flops
+        comp = num_epochs * math.ceil(len(data['y'])/batch_size) * batch_size * self.flops
         return comp, update, acc, loss
 
     def run_epoch(self, data, batch_size):
@@ -146,7 +147,11 @@ class Model(ABC):
 
     def close(self):
         self.sess.close()
-
+    
+    def get_comp(self, data, num_epochs=1, batch_size=10):
+        comp = num_epochs * math.ceil(len(data['y'])/batch_size) * batch_size * self.flops
+        return comp
+        
     @abstractmethod
     def process_x(self, raw_x_batch):
         """Pre-processes each batch of features before being fed to the model."""
@@ -193,3 +198,4 @@ class ServerModel:
 
     def close(self):
         self.model.close()
+    

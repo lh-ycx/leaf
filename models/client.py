@@ -15,7 +15,7 @@ logger = L.get_logger()
 class Client:
     
     d = None
-    with open('/home/ubuntu/storage/ycx/final_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
+    with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
         d = json.load(f)
     
     def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None, cfg=None):
@@ -78,11 +78,12 @@ class Client:
             # train_speed = self.device.get_speed()
             # train_time = (len(self.train_data['y'])*num_epochs)/train_speed
             # TODO finish device - use a regression model to predict the training time
+            logger.debug('client {}: num data:{}'.format(self.id, num_data))
             train_time = self.device.get_train_time(num_data, batch_size, num_epochs) # num_sample, batch_size, num_epoch
             upload_time = self.deadline - train_time_limit
             available_time = self.timer.get_available_time(start_t, self.deadline)
             logger.debug('client {}: train time:{}'.format(self.id, train_time))
-            logger.debug('client {} available time:{}'.format(self.id, available_time))
+            logger.debug('client {}: available time:{}'.format(self.id, available_time))
             if train_time > train_time_limit:
                 failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
@@ -96,7 +97,8 @@ class Client:
                     xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
                     data = {'x': xs, 'y': ys}
                     if self.cfg.no_training:
-                        comp, update, acc, loss = -1,-1,-1,-1
+                        comp = self.model.get_comp(data, num_epochs, batch_size)
+                        update, acc, loss = -1,-1,-1
                     else:
                         comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
                 else:
@@ -108,7 +110,8 @@ class Client:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
-                        comp, update, acc, loss = -1,-1,-1,-1
+                        comp = self.model.get_comp(data, num_epochs, num_data)
+                        update, acc, loss = -1,-1,-1
                     else:
                         comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
                 num_train_samples = len(data['y'])

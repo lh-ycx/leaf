@@ -1,6 +1,7 @@
 import os
 from .logger import Logger
 import traceback
+import sys
 
 L = Logger()
 logger = L.get_logger()
@@ -26,6 +27,7 @@ class Config():
         self.minibatch = None       # always None for FedAvg
         self.round_ddl = [1000, 0]
         self.update_frac = 0.5
+        self.max_client_num = 1000    # total client num, -1 for unlimited
         '''
         self.big_upload_time = [5.0, 1.0]
         self.mid_upload_time = [10.0, 1.0]
@@ -66,6 +68,10 @@ class Config():
                         self.eval_every = int(line[1])
                     elif line[0] == 'clients_per_round':
                         self.clients_per_round = int(line[1])
+                    elif line[0] == 'max_client_num':
+                        self.max_client_num = int(line[1])
+                        if self.max_client_num < 0:
+                            self.max_client_num = sys.maxsize
                     elif line[0] == 'min_selected':
                         self.min_selected = int(line[1])
                     elif line[0] == 'batch_size':

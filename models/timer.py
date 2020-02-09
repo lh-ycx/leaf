@@ -210,6 +210,17 @@ class Timer:
                 if Timer.update_cnt % 500 == 0:
                     Timer.save_cache()
                 return
+        if int(self.trace_end - self.trace_start) == 0:
+            logger.info('find an invalid trace where trace_end = trace_start')
+            logger.debug('invalid trace for uid: {}'.format(self.ubt['guid']))
+            Timer.cached_timers[self.guid] = {}
+            Timer.cached_timers[self.guid]['isSuccess'] = self.isSuccess
+            Timer.cached_timers[self.guid]['trace_start'] = self.trace_start
+            Timer.cached_timers[self.guid]['trace_end'] = self.trace_end
+            Timer.cached_timers[self.guid]['ready_time'] = self.ready_time
+            if Timer.update_cnt % 500 == 0:
+                Timer.save_cache()
+            return
 
         logger.debug('user {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
         self.isSuccess = True
@@ -282,4 +293,6 @@ class Timer:
                 available_time += overlay(self.trace_start, end_, item[0], item[1])
                 trace_available += item[1] - item[0]
             available_time += trace_available * (end - self.trace_end) // (self.trace_end - self.trace_start)
+        # if available_time < 60:
+            # logger.info('available time: {}'.format(available_time))
         return available_time

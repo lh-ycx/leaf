@@ -189,12 +189,13 @@ def main():
             if cfg.no_training:
                 continue
             logger.info('--------------------- test result ---------------------')
-            test_clients = random.sample(clients, min(813,len(clients)))
+            test_clients = random.sample(clients, min(100,len(clients)))
             sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)
             logger.info('number of clients for test: {} of {} '.format(len(test_clients),len(clients)))
             another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
             # print_stats(i + 1, server, test_clients, client_num_samples, args, stat_writer_fn)
             print_stats(i + 1, server, test_clients, sc_num_samples, args, another_stat_writer_fn)
+            server.save_client2cnt()
     
     # Save server model
     ckpt_path = os.path.join('checkpoints', cfg.dataset)
@@ -225,19 +226,20 @@ def online(clients, cur_time, time_window):
 def create_clients(users, groups, train_data, test_data, model, cfg):
     L = Logger()
     logger = L.get_logger()
+    client_num = min(cfg.max_client_num, len(users))
+    users = random.sample(users, client_num)
     logger.info('Clients in Total: %d' % (len(users)))
     if len(groups) == 0:
         groups = [[] for _ in users]
     # clients = [Client(u, g, train_data[u], test_data[u], model, random.randint(0, 2), cfg) for u, g in zip(users, groups)]
     # clients = [Client(u, g, train_data[u], test_data[u], model, Device(random.randint(0, 2), cfg)) for u, g in zip(users, groups)]
-    # TODO setting up clients is a little slow due to the import of timer
     cnt = 0
     clients = []
     for u, g in zip(users, groups):
         c = Client(u, g, train_data[u], test_data[u], model, Device(cfg), cfg)
         clients.append(c)
         cnt += 1
-        if cnt % 50 == 0:
+        if cnt % 500 == 0:
             logger.info('set up {} clients'.format(cnt))
     from timer import Timer
     Timer.save_cache()

@@ -69,7 +69,7 @@ class Device_Util:
                 return self.supported_devices[_min_iter]
             return self.unknown()
         except Exception as e:
-            traceback.print_exc()
+            # traceback.print_exc()
             return self.unknown()
     
 
