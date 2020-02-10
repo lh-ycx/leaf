@@ -105,6 +105,33 @@ class Device_Util:
         '''
         return real_device in self.real2benchmark and 'unknown' not in self.real2benchmark[real_device]
     
+    def get_layer_train_time(device, layer, batch_size, seq_len, in_size, out_size):
+        """
+        :return single layer train time
+        :param device: device type in ['sumsung_note10', 'redmi_note8', 'nexus6'] for small, middle, big
+        :param layer: in ['embedding', 'lstm', 'output']
+        :return:
+        """
+        if layer == 'embedding':
+            in_size /= 10000
+            out_size /= 1000
+        elif layer == 'lstm':
+            in_size /= 1000
+            out_size /= 1000
+        else:
+            in_size /= 1000
+            out_size /= 10000
+        batch_size /= 50
+        seq_len = 1  # TODO: new data
+        with tf.Session() as sess:
+            new_saver = tf.train.import_meta_graph(os.path.join('checkpoint/lookup_table', device, layer, '{}.ckpt.meta'.format(layer)))
+            new_saver.restore(sess, os.path.join('checkpoint/lookup_table', device, layer, '{}.ckpt'.format(layer)))
+            model = tf.get_collection('pred_network')[0]
+            graph = tf.get_default_graph()
+            tf_x = graph.get_operation_by_name('features').outputs[0]
+            layer_train_time = sess.run(model, feed_dict={tf_x: [[in_size, out_size, batch_size, seq_len]]})
+            return layer_train_time[0][0]
+    
     def get_train_time(self, model, num_sample, batch_size, num_epoch):
         '''
             return the training time using look up table
