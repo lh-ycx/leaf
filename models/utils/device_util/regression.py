@@ -25,7 +25,7 @@ def regression_lookup_table(device, layer):
         saver = tf.train.Saver()
         tf.add_to_collection('pred_network', output)
         best_loss = None
-        n_epoch = 100
+        n_epoch = 10000000
         layer = layer.split('_')[0]
         save_dir = os.path.join('checkpoint/lookup_table', device, layer)
         if not os.path.exists(save_dir):
@@ -42,6 +42,5 @@ def regression_lookup_table(device, layer):
 if __name__ == '__main__':
     device_list = ['sumsung_note10', 'redmi_note8', 'nexus6']
     layer_list = ['embedding', 'lstm', 'output']
-    for d in device_list:
-        for l in layer_list:
-            regression_lookup_table(d, l)
+    for l in layer_list:
+            regression_lookup_table('sumsung_note10', l)
