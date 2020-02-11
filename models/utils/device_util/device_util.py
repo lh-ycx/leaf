@@ -105,7 +105,7 @@ class Device_Util:
         '''
         return real_device in self.real2benchmark and 'unknown' not in self.real2benchmark[real_device]
     
-    def get_layer_train_time(device, layer, batch_size, seq_len, in_size, out_size):
+    def get_layer_train_time(self, device, layer, batch_size, seq_len, in_size, out_size):
         """
         :return single layer train time, in seconds
         :param device: device type in ['sumsung_note10', 'redmi_note8', 'nexus6'] for small, middle, big
