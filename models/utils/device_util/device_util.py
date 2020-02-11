@@ -142,12 +142,12 @@ class Device_Util:
                 num_epoch: number of epoches
         '''
 
-        # TODO - finish look up table
         reddit_profile_data = [6.5, 4.1, 1.5]
         ii = self.supported_devices.index(model)
         return num_epoch * ((num_sample-1)//batch_size + 1) * reddit_profile_data[ii]
 
 
 if __name__ == "__main__":
-    du = Device_Util()
-    du.transfer('motorola one vision')
+    # du = Device_Util()
+    # du.transfer('motorola one vision')
+    

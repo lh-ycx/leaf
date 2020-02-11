@@ -288,9 +288,9 @@ def get_sys_writer_function(args):
 def print_stats(
     num_round, server, clients, num_samples, args, writer):
     
-    train_stat_metrics = server.test_model(clients, set_to_use='train')
-    print_metrics(train_stat_metrics, num_samples, prefix='train_')
-    writer(num_round, train_stat_metrics, 'train')
+    # train_stat_metrics = server.test_model(clients, set_to_use='train')
+    # print_metrics(train_stat_metrics, num_samples, prefix='train_')
+    # writer(num_round, train_stat_metrics, 'train')
 
     test_stat_metrics = server.test_model(clients, set_to_use='test')
     print_metrics(test_stat_metrics, num_samples, prefix='test_')
