@@ -1,8 +1,10 @@
 import tensorflow as tf
 import numpy as np
+import os
+import json
 
 def regression_lookup_table(device, layer):
-    with open(os.path.join('regression', device, '{}.json'.format(layer)), 'w', encoding='utf-8') as f:
+    with open(os.path.join('regression', device, '{}.json'.format(layer)), 'r', encoding='utf-8') as f:
         d=json.load(f)
     features = np.array(d['X'])
     labels = np.array(d['Y'])
@@ -16,7 +18,8 @@ def regression_lookup_table(device, layer):
     tf_y = tf.placeholder(tf.float32, [None, train_labels.shape[1]], name='labels')  # input y
 
     l1 = tf.layers.dense(tf_x, 10, tf.nn.relu)  # hidden layer
-    output = tf.layers.dense(l1, 1)  # output layer
+    l2 = tf.layers.dense(l1, 5, tf.nn.relu)
+    output = tf.layers.dense(l2, 1)  # output layer
     loss = tf.losses.mean_squared_error(tf_y, output)  # compute cost
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5)
     train_op = optimizer.minimize(loss)
@@ -31,11 +34,11 @@ def regression_lookup_table(device, layer):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         for epoch in range(n_epoch):
-            _, l, pred = sess.run([train_op, loss, output], feed_dict={tf_x: train_features, tf_y: train_labels})
-            if not best_loss or l < best_loss:
-                best_loss = l
-                saver.save(sess, os.path.join(save_dir, '{}.ckpt'.format(layer)))
-            if epoch % 10 == 0:
+            _, l, pred = sess.run([train_op, loss, output], feed_dict={tf_x: train_features, tf_y: train_labels})            
+            if epoch % 1000 == 0:
+                if not best_loss or l < best_loss:
+                    best_loss = l
+                    saver.save(sess, os.path.join(save_dir, '{}.ckpt'.format(layer)))
                 print(epoch, l)
 
 
