@@ -1,7 +1,3 @@
-## TODO use rank instead of the score to find the nearest model
-## TODO change small middle big device to our real wupported device
-
-
 import json
 import traceback
 import sys
@@ -147,7 +143,7 @@ class Device_Util:
         return num_epoch * ((num_sample-1)//batch_size + 1) * reddit_profile_data[ii]
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # du = Device_Util()
     # du.transfer('motorola one vision')
     
