@@ -112,6 +112,7 @@ class Device_Util:
         :param layer: in ['embedding', 'lstm', 'output']
         :return:
         """
+        redundent_outsize = 500 / 10000
         if layer == 'embedding':
             in_size /= 10000
             out_size /= 1000
@@ -122,15 +123,15 @@ class Device_Util:
             in_size /= 1000
             out_size /= 10000
         batch_size /= 50
-        seq_len = 1  # TODO: new data
-        with tf.Session() as sess:
-            new_saver = tf.train.import_meta_graph(os.path.join('checkpoint/lookup_table', device, layer, '{}.ckpt.meta'.format(layer)))
-            new_saver.restore(sess, os.path.join('checkpoint/lookup_table', device, layer, '{}.ckpt'.format(layer)))
-            model = tf.get_collection('pred_network')[0]
-            graph = tf.get_default_graph()
-            tf_x = graph.get_operation_by_name('features').outputs[0]
-            layer_train_time = sess.run(model, feed_dict={tf_x: [[in_size, out_size, batch_size, seq_len]]})
-            return layer_train_time[0][0]
+        seq_len /= 20
+        model = models.load_model(os.path.join('model/lookup_table', device, '{}.h5'.format(layer)))
+        output = models.load_model(os.path.join('model/lookup_table', device, 'output.h5')
+        x = [[in_size, out_size, batch_size, seq_len]]
+        redundent = [[out_size, redundent_outsize, batch_size, seq_len]]
+        if layer == 'embedding' or layer == 'lstm':
+            return model.predict(np.array(x)) - output.predict(np.array(redundent))
+        else:
+            return model.predict(np.array(x))
     
     def get_train_time(self, model, num_sample, batch_size, num_epoch):
         '''
