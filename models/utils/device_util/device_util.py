@@ -6,6 +6,7 @@ import json
 import traceback
 import sys
 import os
+from keras import models
 cur_dir = os.path.dirname(__file__)
 
 class Device_Util:
