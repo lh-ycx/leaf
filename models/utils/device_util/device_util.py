@@ -130,7 +130,7 @@ class Device_Util:
         batch_size /= 50
         seq_len /= 20
         model = models.load_model(os.path.join('model/lookup_table', device, '{}.h5'.format(layer)))
-        output = models.load_model(os.path.join('model/lookup_table', device, 'output.h5')
+        output = models.load_model(os.path.join('model/lookup_table', device, 'output.h5'))
         x = [[in_size, out_size, batch_size, seq_len]]
         redundent = [[out_size, redundent_outsize, batch_size, seq_len]]
         if layer == 'embedding' or layer == 'lstm':
