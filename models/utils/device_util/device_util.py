@@ -153,7 +153,7 @@ class Device_Util:
         celeba_mean = [5392, 1355, 561]
         celeba_std = [982.5, 54.6, 20.3]
         ii = self.supported_devices.index(model)
-        train_time_per_batch = np.random.normal(reddit_mean[ii], device_std[ii]) / 1000
+        train_time_per_batch = np.random.normal(celeba_mean[ii], celeba_std[ii]) / 1000
         return num_epoch * ((num_sample-1)//batch_size + 1) * train_time_per_batch
 
 
