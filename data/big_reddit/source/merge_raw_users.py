@@ -35,9 +35,10 @@ random.seed(3760145)
 random.shuffle(user_keys)
 
 num_users = len(all_users)
+print('num_users: ', num_users)
 
 num_lots = (num_users // USERS_PER_REPEAT) + 1
-print('num_lots', num_lots)
+print('num_lots: ', num_lots)
 
 cur_file = 1
 for l in range(num_lots):
@@ -56,6 +57,8 @@ for l in range(num_lots):
                 continue
 
             cur_users[u].extend([c for c in users[u] if len(c.body) > 0])
+    
+    # print(cur_users)
     
     written_users = 0
     while written_users < num_cur_users:

@@ -15,8 +15,12 @@ logger = L.get_logger()
 class Client:
     
     d = None
-    with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
-        d = json.load(f)
+    try:
+        with open('/gpfs/share/home/1901213357/ycx/backup/data/trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
+            d = json.load(f)
+    except FileNotFoundError as e:
+        d = None
+        logger.warn('no user behavior trace was found, running in no-trace mode')
     
     def __init__(self, client_id, group=None, train_data={'x' : [],'y' : []}, eval_data={'x' : [],'y' : []}, model=None, device=None, cfg=None):
         self._model = model
@@ -34,6 +38,8 @@ class Client:
         
         # timer
         d = Client.d
+        if d == None:
+            cfg.user_trace = False
         # uid = random.randint(0, len(d))
         if cfg.user_trace:
             uid = random.sample(list(d.keys()), 1)[0]
@@ -43,6 +49,7 @@ class Client:
                 self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
             self.timer = Timer(None)
+            self.deadline = sys.maxsize # deadline is meaningless without user trace
         
         real_device_model = self.timer.model
         if self.device is not None:
@@ -217,7 +224,7 @@ class Client:
     
     
     def set_deadline(self, deadline = -1):
-        if deadline < 0:
+        if deadline < 0 or not self.cfg.user_trace:
             self.deadline = sys.maxsize
         else:
             self.deadline = deadline
@@ -236,6 +243,7 @@ class Client:
             self.upload_time = self.device.get_upload_time()
             logger.debug('client {} upload time: {}'.format(self.id, self.upload_time))
         if self.upload_time < self.deadline :
+            # logger.info('deadline: {}'.format(self.deadline))
             return self.deadline - self.upload_time
         else:
             return 0.01

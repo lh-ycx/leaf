@@ -17,7 +17,7 @@ def subsample_file(f):
 
 		subsampled_comments = [c for c in comments if len(c.body.split()) >= 5]
 	
-		if len(subsampled_comments) >= 5 and len(subsampled_comments) <= 1000:
+		if len(subsampled_comments) >= 100 and len(subsampled_comments) <= 1000:
 			subsampled_reddit[u] = subsampled_comments
 
 	pickle.dump(

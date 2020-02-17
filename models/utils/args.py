@@ -7,7 +7,7 @@ SIM_TIMES = ['small', 'medium', 'large']
 def parse_args():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-config_file',
+    parser.add_argument('--config',
                     help='path to config file;',
                     type=str,
                     # required=True,

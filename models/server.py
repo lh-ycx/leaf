@@ -20,7 +20,11 @@ class Server:
         self.selected_clients = []
         self.all_clients = clients
         self.updates = []
-        self.client2cnt = defaultdict(int)
+        self.clients_info = defaultdict(dict)
+        for c in self.all_clients:
+            self.clients_info[str(c.id)]["comp"] = 0
+            self.clients_info[str(c.id)]["acc"] = 0.0
+            self.clients_info[str(c.id)]["device"] = c.device.device_model
 
     def select_clients(self, my_round, possible_clients, num_clients=20):
         """Selects num_clients clients randomly from possible_clients.
@@ -105,7 +109,7 @@ class Server:
                 if norm_comp == 0:
                     logger.error('comp: {}, flops: {}'.format(comp, self.client_model.flops))
                     assert False
-                self.client2cnt[str(c.id)] += norm_comp
+                self.clients_info[str(c.id)]["comp"] += norm_comp
                 logger.debug('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
                 logger.debug('client {} failed: {}'.format(c.id, e))
@@ -218,6 +222,10 @@ class Server:
             c_metrics = client.test(set_to_use)
             # logger.info('client {} metrics: {}'.format(client.id, c_metrics))
             metrics[client.id] = c_metrics
+            if isinstance(c_metrics['accuracy'], np.ndarray):
+                self.clients_info[client.id]['acc'] = c_metrics['accuracy'].tolist()
+            else:
+                self.clients_info[client.id]['acc'] = c_metrics['accuracy']
         
         return metrics
 
@@ -256,7 +264,7 @@ class Server:
     def get_time_window(self):
         return np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
     
-    def save_client2cnt(self):
-        with open('client2cnt.json', 'w') as f:
-            json.dump(self.client2cnt, f)
-        logger.info('save client2cnt.json.')
+    def save_clients_info(self):
+        with open('clients_info_{}.json'.format(self.cfg.config_name), 'w') as f:
+            json.dump(self.clients_info, f)
+        logger.info('save clients_info.json.')

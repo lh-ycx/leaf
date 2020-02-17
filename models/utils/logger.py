@@ -16,7 +16,7 @@ class Logger():
         sh = logging.StreamHandler()    #往屏幕上输出
         sh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
         Logger.logger.addHandler(sh)
-        Logger.logger.info('logger init finied ---- log file: {}'.format(log_file))
+        Logger.logger.info('logger init finished ---- log file: {}'.format(log_file))
         return Logger.logger
     
     def set_log_name(self, name):

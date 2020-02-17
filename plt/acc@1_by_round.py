@@ -25,11 +25,14 @@ if __name__ == "__main__":
             for line in f:
                 if 'Round' in line:
                     current_round = int(line.split()[9])
-                if 'test_loss' in line:
-                    floats = re.findall(r'\d+\.\d+',line)
-                    test_loss = float(floats[0])
+                if 'test_accuracy' in line:
+                    floats = re.findall(r'\d+\.\d*e*-*\d*',line)
+                    test_acc = float(floats[0])
+                    if test_acc > 1:
+                        print(floats)
+                        assert False
                     x.append(current_round)
-                    y.append(test_loss)
+                    y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
         plt.plot(x,y,color=colors[cnt],linewidth=0.75)
@@ -47,14 +50,18 @@ if __name__ == "__main__":
             for line in f:
                 if 'Round' in line:
                     current_round = int(line.split()[9])
-                if 'test_loss' in line:
-                    floats = re.findall(r'\d+\.\d+',line)
-                    test_loss = float(floats[0])
+                if 'test_accuracy' in line:
+                    floats = re.findall(r'\d+\.\d*e*-*\d*',line)
+                    test_acc = float(floats[0])
+                    if test_acc > 1:
+                        print('E: {}, round: {}'.format(E,current_round))
+                        print(floats)
+                        break
                     x.append(current_round)
-                    y.append(test_loss)
+                    y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt],linestyle=':')
+        plt.plot(x,y,color=colors[cnt], ls='--')
         cnt+=1
     
     # plt.grid(axis='x',color='grey',ls='--')
@@ -67,12 +74,12 @@ if __name__ == "__main__":
             'weight' : 'normal',
             'size'   : 15,
             }
-    plt.xlabel('round num',font)
-    plt.ylabel('test loss',font)
+    plt.xlabel('round num', font)
+    plt.ylabel('top 1 accuracy', font)
     plt.legend(["E = 1, with trace", 
                 "E = 5, with trace", 
                 "E = 20, with trace",
                 "E = 1, without trace", 
                 "E = 5, without trace", 
                 "E = 20, without trace"])
-    plt.savefig('test_loss_by_round.png')
+    plt.savefig('top1_acc_by_round.png')

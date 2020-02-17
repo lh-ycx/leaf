@@ -8,14 +8,22 @@ import random
 import time
 import eventlet
 import signal
+import json
 import traceback
 import tensorflow as tf
 from collections import defaultdict
 
 import metrics.writer as metrics_writer
 
-config_name = 'no_training'     # dataset_aggregateAlgorithm_E
-    
+# config_name = sys.argv[1]       # config file name
+# config_name = 'no_training'     # dataset_aggregateAlgorithm_E
+
+# args
+from utils.args import parse_args
+eventlet.monkey_patch()
+args = parse_args()
+config_name = args.config
+
 # logger
 from utils.logger import Logger
 L = Logger()
@@ -27,7 +35,6 @@ from client import Client
 from server import Server
 from model import ServerModel
 
-from utils.args import parse_args
 from utils.model_utils import read_data
 from utils.config import Config
 from device import Device
@@ -36,17 +43,9 @@ STAT_METRICS_PATH = 'metrics/stat_metrics.csv'
 SYS_METRICS_PATH = 'metrics/sys_metrics.csv'
 
 def main():
-    eventlet.monkey_patch()
-    args = parse_args()
-    
-    '''
-    config_name = args.config_file
-    while config_name[-4:] == '.cfg':
-        config_name = config_name[:-4]
-    '''
-    
+
     # read config from file
-    cfg = Config('{}.cfg'.format(config_name))
+    cfg = Config(config_name)
 
     # Set the random seed if provided (affects client sampling, and batching)
     random.seed(1 + cfg.seed)
@@ -149,7 +148,8 @@ def main():
         while deadline <= 0:
             deadline = np.random.normal(cfg.round_ddl[0], cfg.round_ddl[1])
         deadline = int(deadline)
-        logger.info('selected deadline: {}'.format(deadline))
+        if cfg.user_trace:
+            logger.info('selected deadline: {}'.format(deadline))
         
         # 1.3 update simulation time
         server.pass_time(time_window)
@@ -166,7 +166,7 @@ def main():
         logger.info('--------------------- configuration stage ---------------------')
         # 2.1 train(no parallel implementation)
         sys_metrics = server.train_model(num_epochs=cfg.num_epochs, batch_size=cfg.batch_size, minibatch=cfg.minibatch, deadline = deadline)
-        sys_writer_fn(i + 1, c_ids, sys_metrics, c_groups, c_num_samples)
+        sys_writer_fn(i, c_ids, sys_metrics, c_groups, c_num_samples)
         
         # 2.2 update simulation time
         server.pass_time(sys_metrics['configuration_time'])
@@ -184,25 +184,33 @@ def main():
             continue
         
         if (i + 1) % eval_every == 0 or (i + 1) == num_rounds:
-            logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
-            # logger.info('attended_clients: {}'.format(attended_clients))
             if cfg.no_training:
                 continue
             logger.info('--------------------- test result ---------------------')
-            test_clients = random.sample(clients, min(100,len(clients)))
+            logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
+            # logger.info('attended_clients: {}'.format(attended_clients))
+            # test_clients = random.sample(clients, min(100,len(clients)))
+            test_num = len(clients)//10
+            if (i + 1) == num_rounds:
+                test_num = len(clients)
+                with open('attended_clients_{}.json'.format(config_name), 'w') as fp:
+                    json.dump(list(attended_clients), fp)
+                    logger.info('save attended_clients.json')
+            test_clients = random.sample(clients, test_num) 
             sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)
             logger.info('number of clients for test: {} of {} '.format(len(test_clients),len(clients)))
             another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
             # print_stats(i + 1, server, test_clients, client_num_samples, args, stat_writer_fn)
-            print_stats(i + 1, server, test_clients, sc_num_samples, args, another_stat_writer_fn)
-            server.save_client2cnt()
+            print_stats(i, server, test_clients, sc_num_samples, args, another_stat_writer_fn)
+            if (i + 1) % (5*eval_every) == 0:
+                server.save_clients_info()
     
-    # Save server model
-    ckpt_path = os.path.join('checkpoints', cfg.dataset)
-    if not os.path.exists(ckpt_path):
-        os.makedirs(ckpt_path)
-    save_path = server.save_model(os.path.join(ckpt_path, '{}.ckpt'.format(cfg.model)))
-    logger.info('Model saved in path: %s' % save_path)
+                # Save server model
+                ckpt_path = os.path.join('checkpoints', cfg.dataset)
+                if not os.path.exists(ckpt_path):
+                    os.makedirs(ckpt_path)
+                save_path = server.save_model(os.path.join(ckpt_path, '{}_{}.ckpt'.format(cfg.model, cfg.config_name)))
+                logger.info('Model saved in path: %s' % save_path)
 
     # Close models
     server.close_model()

@@ -9,10 +9,12 @@ import string
 from reddit_utils import RedditComment
 
 
-NUM_USERS = 100000
-MAX_REPEATS = 10
+NUM_USERS = 10000
+MAX_REPEATS = 5
 
-FILE = '../RC_2017-12'
+# FILE = '../RC_2017-12'
+FILE = '../sort_result'
+
 SUBS_TO_REMOVE = ['AskReddit', 'ImagesOfNetwork']
 USERS_TO_REMOVE = [
 	'AskReddit',

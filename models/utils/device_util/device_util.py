@@ -6,6 +6,7 @@ import json
 import traceback
 import sys
 import os
+import numpy as np
 cur_dir = os.path.dirname(__file__)
 
 class Device_Util:
@@ -81,7 +82,10 @@ class Device_Util:
             Return:
                 default supported device model
         '''
-        return self.supported_devices[1]
+        pk = np.array([18820, 16428, 159])  # supported devices
+        pk = pk / sum(pk)
+        i = np.random.choice(3, p=pk)
+        return self.supported_devices[i]
     
     def is_support(self, real_device):
         '''
@@ -142,12 +146,16 @@ class Device_Util:
                 num_epoch: number of epoches
         '''
 
-        reddit_profile_data = [6.5, 4.1, 1.5]
+        reddit_mean = [2596, 916, 875]
+        reddit_std = [335.5, 20.6, 224.3]
+        celeba_mean = [5392, 1355, 561]
+        celeba_std = [982.5, 54.6, 20.3]
         ii = self.supported_devices.index(model)
-        return num_epoch * ((num_sample-1)//batch_size + 1) * reddit_profile_data[ii]
+        train_time_per_batch = np.random.normal(reddit_mean[ii], device_std[ii]) / 1000
+        return num_epoch * ((num_sample-1)//batch_size + 1) * train_time_per_batch
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # du = Device_Util()
     # du.transfer('motorola one vision')
     
