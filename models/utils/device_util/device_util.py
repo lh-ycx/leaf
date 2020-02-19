@@ -117,7 +117,7 @@ class Device_Util:
         :param layer: in ['embedding', 'lstm', 'output']
         :return:
         """
-        redundent_outsize = 500 / 10000
+        redundent_outsize = 2 / 10000
         if layer == 'embedding':
             in_size /= 10000
             out_size /= 1000
