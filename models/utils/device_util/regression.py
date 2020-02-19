@@ -25,7 +25,7 @@ def regression_lookup_table(device, layer):
         Dense(1)
     ])
     model.compile(loss='mse', optimizer='sgd')
-    model.fit(x=train_features, y=train_labels, epochs=10000, verbose=2)
+    model.fit(x=train_features, y=train_labels, epochs=1000, verbose=2)
     save_dir = os.path.join('model/lookup_table', device)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
