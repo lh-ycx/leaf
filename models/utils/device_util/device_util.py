@@ -13,6 +13,7 @@ cur_dir = os.path.dirname(__file__)
 class Device_Util:
     
     def __init__(self):
+        self.model = None
         try:
             with open(os.path.join(cur_dir, 'real2benchmark.json')) as f:
                 self.real2benchmark = json.load(f)
@@ -153,8 +154,17 @@ class Device_Util:
         celeba_mean = [5392, 1355, 561]
         celeba_std = [982.5, 54.6, 20.3]
         ii = self.supported_devices.index(model)
-        train_time_per_batch = np.random.normal(celeba_mean[ii], celeba_std[ii]) / 1000
+        if self.model == 'cnn':
+            train_time_per_batch = np.random.normal(celeba_mean[ii], celeba_std[ii]) / 1000
+        elif self.model == 'topk_stacked_lstm':
+            train_time_per_batch = np.random.normal(reddit_mean[ii], reddit_std[ii]) / 1000
+        else:
+            # TODO get time by layer
+            train_time_per_batch = np.random.normal(reddit_mean[ii], reddit_std[ii]) / 1000
         return num_epoch * ((num_sample-1)//batch_size + 1) * train_time_per_batch
+
+    def set_model(self, model):
+        self.model = model
 
 
 # if __name__ == "__main__":

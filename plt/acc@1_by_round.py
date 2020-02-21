@@ -5,16 +5,18 @@ from matplotlib.pyplot import MultipleLocator
 import time
 import re
 from math import log
+import sys
 
 Es = [1,5,20]
 colors = ['blue', 'green', 'orange']
 log_dir = '../models/'
+dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
     cnt = 0
     for E in Es:
-        with open('{}reddit_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -39,7 +41,7 @@ if __name__ == "__main__":
         cnt+=1
     cnt = 0
     for E in Es:
-        with open('{}reddit_no_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_no_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -75,11 +77,11 @@ if __name__ == "__main__":
             'size'   : 15,
             }
     plt.xlabel('round num', font)
-    plt.ylabel('top 1 accuracy', font)
+    plt.ylabel('accuracy', font)
     plt.legend(["E = 1, with trace", 
                 "E = 5, with trace", 
                 "E = 20, with trace",
                 "E = 1, without trace", 
                 "E = 5, without trace", 
                 "E = 20, without trace"])
-    plt.savefig('top1_acc_by_round.png')
+    plt.savefig('{}_acc_by_round.png'.format(dataset))

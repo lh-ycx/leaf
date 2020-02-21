@@ -4,17 +4,19 @@ from datetime import datetime
 from matplotlib.pyplot import MultipleLocator
 import time
 import re
+import sys
 from math import log
 
 Es = [1,5,20]
 colors = ['blue', 'green', 'orange']
 log_dir = '../models/'
+dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
     cnt = 0
     for E in Es:
-        with open('{}reddit_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -26,7 +28,7 @@ if __name__ == "__main__":
                 if 'Round' in line:
                     current_round = int(line.split()[9])
                 if 'test_loss' in line:
-                    floats = re.findall(r'\d+\.\d+',line)
+                    floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                     test_loss = float(floats[0])
                     x.append(current_round)
                     y.append(test_loss)
@@ -36,7 +38,7 @@ if __name__ == "__main__":
         cnt+=1
     cnt = 0
     for E in Es:
-        with open('{}reddit_no_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_no_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -48,7 +50,7 @@ if __name__ == "__main__":
                 if 'Round' in line:
                     current_round = int(line.split()[9])
                 if 'test_loss' in line:
-                    floats = re.findall(r'\d+\.\d+',line)
+                    floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                     test_loss = float(floats[0])
                     x.append(current_round)
                     y.append(test_loss)
@@ -75,4 +77,4 @@ if __name__ == "__main__":
                 "E = 1, without trace", 
                 "E = 5, without trace", 
                 "E = 20, without trace"])
-    plt.savefig('test_loss_by_round.png')
+    plt.savefig('{}_loss_by_round.png'.format(dataset))

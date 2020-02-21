@@ -25,6 +25,7 @@ class Server:
             self.clients_info[str(c.id)]["comp"] = 0
             self.clients_info[str(c.id)]["acc"] = 0.0
             self.clients_info[str(c.id)]["device"] = c.device.device_model
+            self.clients_info[str(c.id)]["sample_num"] = len(c.train_data['y'])
 
     def select_clients(self, my_round, possible_clients, num_clients=20):
         """Selects num_clients clients randomly from possible_clients.
@@ -98,6 +99,8 @@ class Server:
                 losses.append(loss)
                 if simulate_time_c > simulate_time:
                     simulate_time = simulate_time_c
+                    if self.cfg.user_trace == False and simulate_time > deadline:
+                        simulate_time = deadline
                 sys_metrics[c.id][BYTES_READ_KEY] += c.model.size
                 sys_metrics[c.id][BYTES_WRITTEN_KEY] += c.model.size
                 sys_metrics[c.id][LOCAL_COMPUTATIONS_KEY] = comp

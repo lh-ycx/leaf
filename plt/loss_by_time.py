@@ -5,16 +5,18 @@ from matplotlib.pyplot import MultipleLocator
 import time
 import re
 from math import log
+import sys
 
 Es = [1,5,20]
 colors = ['blue', 'green', 'orange']
 log_dir = '../models/'
+dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
     cnt = 0
     for E in Es:
-        with open('{}reddit_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -37,7 +39,7 @@ if __name__ == "__main__":
         cnt+=1
     cnt = 0
     for E in Es:
-        with open('{}reddit_no_trace_{}.cfg.log'.format(log_dir, E), 'r') as f:
+        with open('{}{}_no_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -77,4 +79,4 @@ if __name__ == "__main__":
                 "E = 1, without trace", 
                 "E = 5, without trace", 
                 "E = 20, without trace"])
-    plt.savefig('test_loss_by_time.png')
+    plt.savefig('{}_loss_by_time.png'.format(dataset))

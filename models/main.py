@@ -191,27 +191,29 @@ def main():
             # logger.info('attended_clients: {}'.format(attended_clients))
             # test_clients = random.sample(clients, min(100,len(clients)))
             test_num = len(clients)//10
-            if (i + 1) == num_rounds:
-                test_num = len(clients)
+            if (i + 1) % (10*eval_every) == 0 or (i + 1) == num_rounds:
+                test_num = len(clients)    
                 with open('attended_clients_{}.json'.format(config_name), 'w') as fp:
                     json.dump(list(attended_clients), fp)
                     logger.info('save attended_clients.json')
-            test_clients = random.sample(clients, test_num) 
-            sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)
-            logger.info('number of clients for test: {} of {} '.format(len(test_clients),len(clients)))
-            another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
-            # print_stats(i + 1, server, test_clients, client_num_samples, args, stat_writer_fn)
-            print_stats(i, server, test_clients, sc_num_samples, args, another_stat_writer_fn)
-            if (i + 1) % (5*eval_every) == 0:
-                server.save_clients_info()
-    
+                
                 # Save server model
                 ckpt_path = os.path.join('checkpoints', cfg.dataset)
                 if not os.path.exists(ckpt_path):
                     os.makedirs(ckpt_path)
                 save_path = server.save_model(os.path.join(ckpt_path, '{}_{}.ckpt'.format(cfg.model, cfg.config_name)))
                 logger.info('Model saved in path: %s' % save_path)
-
+                
+            test_clients = random.sample(clients, test_num) 
+            sc_ids, sc_groups, sc_num_samples = server.get_clients_info(test_clients)
+            logger.info('number of clients for test: {} of {} '.format(len(test_clients),len(clients)))
+            another_stat_writer_fn = get_stat_writer_function(sc_ids, sc_groups, sc_num_samples, args)
+            # print_stats(i + 1, server, test_clients, client_num_samples, args, stat_writer_fn)
+            print_stats(i, server, test_clients, sc_num_samples, args, another_stat_writer_fn)
+            
+            if (i + 1) % (10*eval_every) == 0 or (i + 1) == num_rounds:
+                server.save_clients_info()
+            
     # Close models
     server.close_model()
 

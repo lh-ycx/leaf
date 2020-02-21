@@ -23,8 +23,20 @@ if __name__ == "__main__":
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/10)
         data_2 = np.array(data)
+    with open('{}clients_info_celeba_no_trace_1.cfg.json'.format(log_dir), 'r') as f:
+        client2comp = json.load(f)
+        data = []
+        for key in client2comp:
+            data.append(int(client2comp[key]['comp'])/10)
+        data_3 = np.array(data)
+    with open('{}clients_info_celeba_trace_1.cfg.json'.format(log_dir), 'r') as f:
+        client2comp = json.load(f)
+        data = []
+        for key in client2comp:
+            data.append(int(client2comp[key]['comp'])/10)
+        data_4 = np.array(data)
     fig, ax = plt.subplots()
-    ax.boxplot([data_1,data_2, data, data], notch=True, showfliers=False)
+    ax.boxplot([data_1,data_2,data_3,data_4], notch=True, showfliers=False)
     font = {
         'weight' : 'normal',
         'size'   : 13,
