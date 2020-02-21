@@ -118,7 +118,7 @@ class Device_Util:
         :param layer: in ['embedding', 'lstm', 'output']
         :return:
         """
-        redundent_outsize = 500 / 10000
+        redundent_outsize = 2 / 10000
         if layer == 'embedding':
             in_size /= 10000
             out_size /= 1000
@@ -129,7 +129,7 @@ class Device_Util:
             in_size /= 1000
             out_size /= 10000
         batch_size /= 50
-        seq_len /= 20
+        seq_len /= 10
         model = models.load_model(os.path.join('model/lookup_table', device, '{}.h5'.format(layer)))
         output = models.load_model(os.path.join('model/lookup_table', device, 'output.h5'))
         x = [[in_size, out_size, batch_size, seq_len]]

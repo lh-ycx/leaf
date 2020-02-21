@@ -25,7 +25,7 @@ def regression_lookup_table(device, layer):
         Dense(1)
     ])
     model.compile(loss='mse', optimizer='sgd')
-    model.fit(x=train_features, y=train_labels, epochs=10000, verbose=2)
+    model.fit(x=train_features, y=train_labels, epochs=1000, verbose=2)
     save_dir = os.path.join('model/lookup_table', device)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -33,7 +33,7 @@ def regression_lookup_table(device, layer):
 
 
 if __name__ == '__main__':
-    device_list = ['sumsung_note10', 'redmi_note8']
+    device_list = ['sumsung_note10', 'redmi_note8', 'nexus6']
     layer_list = ['embedding', 'lstm', 'output']
     for d in device_list:
         for l in layer_list:
