@@ -115,7 +115,12 @@ class Server:
                 self.clients_info[str(c.id)]["comp"] += norm_comp
                 logger.debug('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
-                logger.debug('client {} failed: {}'.format(c.id, e))
+                # logger.debug('client {} failed: {}'.format(c.id, e))
+                if "client interruption" in str(e):
+                    logger.info('client {} failed: {}'.format(c.id, e))
+                actual_comp = c.get_actual_comp()
+                norm_comp = int(actual_comp/self.client_model.flops)
+                self.clients_info[str(c.id)]["comp"] += norm_comp
                 simulate_time = deadline
             except Exception as e:
                 logger.error('client {} failed: {}'.format(c.id, e))

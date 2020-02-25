@@ -88,32 +88,41 @@ class Client:
             logger.debug('client {}: num data:{}'.format(self.id, num_data))
             train_time = self.device.get_train_time(num_data, batch_size, num_epochs) # num_sample, batch_size, num_epoch
             upload_time = self.deadline - train_time_limit
-            available_time = self.timer.get_available_time(start_t, self.deadline)
+            available_time = self.timer.get_available_time(start_t, train_time_limit)
             logger.debug('client {}: train time:{}'.format(self.id, train_time))
             logger.debug('client {}: available time:{}'.format(self.id, available_time))
+            
+            # compute num_data
+            if minibatch is None:
+                num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
+                xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
+                data = {'x': xs, 'y': ys}
+            else:
+                frac = min(1.0, minibatch)
+                num_data = max(1, int(frac*len(self.train_data["x"])))
+                xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
+                data = {'x': xs, 'y': ys}
+            
             if train_time > train_time_limit:
-                failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
+                # data sampling
+                comp = self.model.get_comp(data, num_epochs, batch_size)
+                self.actual_comp = int(comp*train_time_limit/train_time)    # will be used in get_actual_comp
+                failed_reason = 'data sampling: train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             elif train_time > available_time:
-                failed_reason = 'train_time({}) > available_time({})'.format(train_time, available_time)
+                # client interruption
+                comp = self.model.get_comp(data, num_epochs, batch_size)
+                self.actual_comp = int(comp*train_time_limit/train_time)    # will be used in get_actual_comp
+                failed_reason = 'client interruption: train_time({}) > available_time({})'.format(train_time, available_time)
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
-                    # data = self.train_data
-                    num_data = min(len(self.train_data["x"]), self.cfg.max_sample)
-                    xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
-                    data = {'x': xs, 'y': ys}
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
                         update, acc, loss = -1,-1,-1
                     else:
                         comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
                 else:
-                    frac = min(1.0, minibatch)
-                    num_data = max(1, int(frac*len(self.train_data["x"])))
-                    xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
-                    data = {'x': xs, 'y': ys}
-
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
@@ -123,6 +132,7 @@ class Client:
                         comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + self.upload_time
+                self.actual_comp = comp
                 return simulate_time_c, comp, num_train_samples, update, acc, loss
         
         @timeout_decorator.timeout(train_time_limit)
@@ -271,16 +281,12 @@ class Client:
         
         train_time = self.device.get_train_time(num_data, batch_size, num_epochs) # num_sample, batch_size, num_epoch
         upload_time = self.deadline - train_time_limit
-        available_time = self.timer.get_available_time(start_t, self.deadline)
+        available_time = self.timer.get_available_time(start_t, train_time_limit)
         logger.debug('client {}: train time:{}'.format(self.id, train_time))
         logger.debug('client {} available time:{}'.format(self.id, available_time))
         if train_time > train_time_limit:
-            failed_reason = 'train_time({}) + upload_time({}) > deadline({})'.format(train_time, upload_time, self.deadline)
-            logger.debug('client {} fail with reason {}'.format(self.id, failed_reason))
             return False
         elif train_time > available_time:
-            failed_reason = 'train_time({}) > available_time({})'.format(train_time, available_time)
-            logger.debug('client {} fail with reason {}'.format(self.id, failed_reason))
             return False
         else:
             return True
@@ -291,3 +297,8 @@ class Client:
             return 'None'
         return self.device.device_model
         
+    def get_actual_comp(self):
+        '''
+        get the actual computation in the training process
+        '''
+        return self.actual_comp

@@ -13,7 +13,7 @@ class ClientModel(Model):
         self.seq_len = seq_len
         self.num_classes = num_classes
         self.n_hidden = n_hidden
-        super(ClientModel, self).__init__(seed, lr, gpu_fraction=gpu_fraction)
+        super(ClientModel, self).__init__(seed, lr)
 
 
     def create_model(self):

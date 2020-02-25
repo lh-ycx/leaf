@@ -21,6 +21,7 @@ class Device():
         self.upload_time_sigma = cfg.upload_time[1]
         
         Device.du.set_model(cfg.model)
+        Device.du.set_dataset(cfg.dataset)
 
     def set_device_model(self, real_device_model):
         self.device_model = Device.du.transfer(real_device_model)
