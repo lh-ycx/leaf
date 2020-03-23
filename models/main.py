@@ -15,9 +15,6 @@ from collections import defaultdict
 
 import metrics.writer as metrics_writer
 
-# config_name = sys.argv[1]       # config file name
-# config_name = 'no_training'     # dataset_aggregateAlgorithm_E
-
 # args
 from utils.args import parse_args
 eventlet.monkey_patch()
@@ -190,9 +187,9 @@ def main():
             logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
             # logger.info('attended_clients: {}'.format(attended_clients))
             # test_clients = random.sample(clients, min(100,len(clients)))
-            test_num = len(clients)
+            test_num = min(len(clients), 100)
             if (i + 1) % (10*eval_every) == 0 or (i + 1) == num_rounds:
-                test_num = len(clients)    
+                test_num = len(clients)
                 with open('attended_clients_{}.json'.format(config_name), 'w') as fp:
                     json.dump(list(attended_clients), fp)
                     logger.info('save attended_clients.json')
@@ -247,6 +244,8 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
     clients = []
     for u, g in zip(users, groups):
         c = Client(u, g, train_data[u], test_data[u], model, Device(cfg), cfg)
+        if len(c.train_data["x"]) == 0:
+            continue
         clients.append(c)
         cnt += 1
         if cnt % 500 == 0:

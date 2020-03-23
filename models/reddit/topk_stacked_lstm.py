@@ -57,25 +57,39 @@ class ClientModel(Model):
                 softmax_b = tf.get_variable('softmax_b', [self.vocab_size], dtype=tf.float32)
             
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
-
-            # correct top 3 predictions
-            labels_reshaped = tf.reshape(labels, [-1])
-            pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            
+            # unknown and padding are always regarded False, so change the labels to an impossible value
+            unk_tensor = tf.fill(tf.shape(labels) , self.unk_symbol)
+            pred_unk = tf.cast(tf.equal(labels, unk_tensor), tf.int32)
+            labels_rm_unk = tf.add(labels, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
+            pad_tensor = tf.fill(tf.shape(labels) , self.pad_symbol)
+            pred_pad = tf.cast(tf.equal(labels, pad_tensor), tf.int32)
+            labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(pred_pad, [tf.shape(logits)[1]]))
+            
+            labels_reshaped = tf.reshape(labels_rm_pad, [-1])
+            # pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            pred = tf.nn.in_top_k(logits, labels_reshaped, k = 1)
             top3_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 3)
             top5_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 5)
-            correct_pred = tf.cast(tf.equal(pred, labels_reshaped), tf.int32)
+            correct_pred = tf.cast(pred, tf.int32)
             top3_correct_pred = tf.cast(top3_pred, tf.int32)
             top5_correct_pred = tf.cast(top5_pred, tf.int32)
             
+            '''
             # predicting unknown is always considered wrong
             unk_tensor = tf.fill(tf.shape(labels_reshaped), self.unk_symbol)
             pred_unk = tf.cast(tf.equal(pred, unk_tensor), tf.int32)
             correct_unk = tf.multiply(pred_unk, correct_pred)
+            top3_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 3), tf.int32)
+            top5_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 5), tf.int32)
 
             # predicting padding is always considered wrong
-            pad_tensor = tf.fill(tf.shape(labels_reshaped), 0)
+            pad_tensor = tf.fill(tf.shape(labels_reshaped), self.pad_symbol)
             pred_pad = tf.cast(tf.equal(pred, pad_tensor), tf.int32)
             correct_pad = tf.multiply(pred_pad, correct_pred)
+            top3_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 3), tf.int32)
+            top5_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 5), tf.int32)
+            '''
 
             # Reshape logits to be a 3-D tensor for sequence loss
             logits = tf.reshape(logits, [-1, self.seq_len, self.vocab_size])
@@ -99,9 +113,11 @@ class ClientModel(Model):
                 zip(grads, tvars),
                 global_step=tf.train.get_or_create_global_step())
 
-            eval_metric_ops = [ tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
-                                tf.count_nonzero(top3_correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
-                                tf.count_nonzero(top5_correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad) ]
+            # eval_metric_ops = [ tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
+            #                     tf.count_nonzero(top3_correct_pred) - tf.count_nonzero(top3_correct_unk) - tf.count_nonzero(top3_correct_pad),
+            #                    tf.count_nonzero(top5_correct_pred) - tf.count_nonzero(top5_correct_unk) - tf.count_nonzero(top5_correct_pad) ]
+
+            eval_metric_ops = [tf.count_nonzero(correct_pred), tf.count_nonzero(top3_correct_pred), tf.count_nonzero(top5_correct_pred)]
 
         return features, labels, train_op, eval_metric_ops, self.cost
 

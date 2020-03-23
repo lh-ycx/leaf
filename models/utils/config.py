@@ -45,6 +45,7 @@ class Config():
         self.time_window = [20.0, 0.0]  # time window for selection stage
         self.user_trace = False
         self.no_training = False
+        self.real_world = False
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -107,6 +108,11 @@ class Config():
                         self.no_training = line[1].strip() == 'True'
                         if self.no_training:
                             logger.info('no actual training process')
+                    elif line[0] == 'real_world':
+                        self.real_world == line[1].strip() == 'True'
+                        if self.real_world and 'realworld' not in self.dataset:
+                            logger.error('\'real_world\' is valid only when dataset is set to \'realworld\'')
+                            self.real_world = False
                     elif line[0] == 'max_sample' :
                         self.max_sample = int(line[1])
                 except Exception as e:

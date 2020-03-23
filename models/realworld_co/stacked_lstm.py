@@ -9,7 +9,7 @@ from tensorflow.contrib import rnn
 
 from model import Model
 
-VOCABULARY_PATH = '../data/big_reddit/vocab/reddit_vocab.pck'
+VOCABULARY_PATH = '../data/realworld_co/vocab/reddit_vocab.pck'
 
 
 # Code adapted from https://github.com/tensorflow/models/blob/master/tutorials/rnn/ptb/ptb_word_lm.py
@@ -57,39 +57,21 @@ class ClientModel(Model):
                 softmax_b = tf.get_variable('softmax_b', [self.vocab_size], dtype=tf.float32)
             
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
+
+            # correct predictions
+            labels_reshaped = tf.reshape(labels, [-1])
+            pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            correct_pred = tf.cast(tf.equal(pred, labels_reshaped), tf.int32)
             
-            # unknown and padding are always regarded False, so change the labels to an impossible value
-            unk_tensor = tf.fill(tf.shape(labels) , self.unk_symbol)
-            pred_unk = tf.cast(tf.equal(labels, unk_tensor), tf.int32)
-            labels_rm_unk = tf.add(labels, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
-            pad_tensor = tf.fill(tf.shape(labels) , self.pad_symbol)
-            pred_pad = tf.cast(tf.equal(labels, pad_tensor), tf.int32)
-            labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(pred_pad, [tf.shape(logits)[1]]))
-            
-            labels_reshaped = tf.reshape(labels_rm_pad, [-1])
-            # pred = tf.cast(tf.argmax(logits, 1), tf.int32)
-            pred = tf.nn.in_top_k(logits, labels_reshaped, k = 1)
-            top3_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 3)
-            top5_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 5)
-            correct_pred = tf.cast(pred, tf.int32)
-            top3_correct_pred = tf.cast(top3_pred, tf.int32)
-            top5_correct_pred = tf.cast(top5_pred, tf.int32)
-            
-            '''
             # predicting unknown is always considered wrong
             unk_tensor = tf.fill(tf.shape(labels_reshaped), self.unk_symbol)
             pred_unk = tf.cast(tf.equal(pred, unk_tensor), tf.int32)
             correct_unk = tf.multiply(pred_unk, correct_pred)
-            top3_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 3), tf.int32)
-            top5_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 5), tf.int32)
 
             # predicting padding is always considered wrong
-            pad_tensor = tf.fill(tf.shape(labels_reshaped), self.pad_symbol)
+            pad_tensor = tf.fill(tf.shape(labels_reshaped), 0)
             pred_pad = tf.cast(tf.equal(pred, pad_tensor), tf.int32)
             correct_pad = tf.multiply(pred_pad, correct_pred)
-            top3_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 3), tf.int32)
-            top5_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 5), tf.int32)
-            '''
 
             # Reshape logits to be a 3-D tensor for sequence loss
             logits = tf.reshape(logits, [-1, self.seq_len, self.vocab_size])
@@ -113,11 +95,7 @@ class ClientModel(Model):
                 zip(grads, tvars),
                 global_step=tf.train.get_or_create_global_step())
 
-            # eval_metric_ops = [ tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad),
-            #                     tf.count_nonzero(top3_correct_pred) - tf.count_nonzero(top3_correct_unk) - tf.count_nonzero(top3_correct_pad),
-            #                    tf.count_nonzero(top5_correct_pred) - tf.count_nonzero(top5_correct_unk) - tf.count_nonzero(top5_correct_pad) ]
-
-            eval_metric_ops = [tf.count_nonzero(correct_pred), tf.count_nonzero(top3_correct_pred), tf.count_nonzero(top5_correct_pred)]
+            eval_metric_ops = tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad)
 
         return features, labels, train_op, eval_metric_ops, self.cost
 
@@ -223,9 +201,7 @@ class ClientModel(Model):
             state = vals['final_state']
 
     def test(self, data, batch_size=5):
-        # tot_acc, tot_samples = 0, 0
-        tot_acc = np.array([0.0,0.0,0.0],dtype=float)
-        tot_samples = 0
+        tot_acc, tot_samples = 0, 0
         tot_loss, tot_batches = 0, 0
 
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
@@ -246,7 +222,7 @@ class ClientModel(Model):
             tot_loss += loss
             tot_batches += 1
 
-        acc = tot_acc / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
+        acc = float(tot_acc) / tot_samples # this top 1 accuracy considers every pred. of unknown and padding as wrong
         loss = tot_loss / tot_batches # the loss is already averaged over samples
         return {'accuracy': acc, 'loss': loss}
 

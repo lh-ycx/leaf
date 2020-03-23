@@ -124,6 +124,8 @@ class Server:
                 simulate_time = deadline
             except Exception as e:
                 logger.error('client {} failed: {}'.format(c.id, e))
+                logger.error('train_x: {}'.format(c.train_data['x']))
+                logger.error('train_y: {}'.format(c.train_data['y']))
                 traceback.print_exc()
         try:
             # logger.info('simulation time: {}'.format(simulate_time))

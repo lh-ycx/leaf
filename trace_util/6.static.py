@@ -2,6 +2,8 @@ import json
 import os
 import time
 from datetime import datetime
+import traceback
+from collections import defaultdict
 
 
 class Timer:
@@ -34,6 +36,7 @@ class Timer:
         battery_level = 0.0
         st = [None, None, None, None, None]
         ed = [None, None, None, None, None]
+        self.interrupt_type2cnt = defaultdict(int)
         for mes in message:
             # print(mes)
             if mes.strip() == '':
@@ -48,7 +51,7 @@ class Timer:
                     charged = False
                 elif s == 'wifi':
                     wifi = True
-                elif s == 'unknown' or s == '4g' or s == '3g' or s == '2g':
+                elif s == 'unknown' or s == '4g' or s == '3g' or s == '2g' or s == '5g':
                     wifi = False
                 elif s == 'screen_on':
                     screen_off = False
@@ -85,6 +88,16 @@ class Timer:
                         st[i] = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
                                 time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
                     elif (st[i] is not None) and not ok[i]:
+                        if i == 1:  # only record interruption type in setting 1
+                            if not idle:
+                                self.interrupt_type2cnt['user use'] += 1
+                            if not wifi:
+                                self.interrupt_type2cnt['network change'] += 1
+                            if not charged:
+                                self.interrupt_type2cnt['charge off'] += 1
+                        if i == 3: # record bettary low in 
+                            if battery_level < 50.0:
+                                self.interrupt_type2cnt['bettary low'] += 1
                         ed[i] = time.mktime(datetime.strptime(t, self.fmt).timetuple()) - \
                                 time.mktime(datetime.strptime(self.refer_time, self.fmt).timetuple())
                         self.setting[i].append([st[i], ed[i]])
@@ -137,24 +150,63 @@ class Timer:
         # print('user {} ready list: {}'.format(self.ubt['guid'], self.ready_time))
         self.isSuccess = True
 
-    def get_avg_ready_time(self, setting=1):
+    def get_avg_daily_ready_time(self, setting=1):
         res = 0
         if not self.isSuccess:
             return 0
-        for item in self.setting[setting]:
+        for item in self.setting[setting]: 
             res += item[1] - item[0]
         return res / self.get_day()
+    
+    def get_avg_interval_length(self, setting=1):
+        intervels = []
+        if not self.isSuccess:
+            return 0
+        for item in self.setting[setting]:
+            if item[1] - item[0] == 0:
+                continue
+            intervels.append(item[1] - item[0])
+        if len(intervels) == 0:
+            return 0
+        return sum(intervels)/len(intervels)
 
     def get_day(self):
         return (self.trace_end - self.trace_start) / 86400
 
 
 if __name__ == '__main__':
-    input_dir = 'data'
+    input_dir = '/home/ubuntu/storage/ycx/final_trace/'
     with open(os.path.join(input_dir, 'normalized_guid2data.json'), 'r') as f:
         guid2data = json.load(f)
+    avg_daily_ready_times = [[],[],[],[],[]]
+    avg_interval_lengths = [[],[],[],[],[]]
+    interrupt_type2cnt = defaultdict(list)
+    cnt = 0
+    total = len(guid2data)
     for key in guid2data:
-        timer = Timer(guid2data[key])
-        for i in range(1, 5):
-            print(timer.get_avg_ready_time(i), timer.setting[i])
-        print()
+        try:
+            timer = Timer(guid2data[key])
+            for key in timer.interrupt_type2cnt:
+                interrupt_type2cnt[key].append(timer.interrupt_type2cnt[key])
+            for i in range(1, 5):
+                avg_daily_ready_times[i].append(timer.get_avg_daily_ready_time(i))
+                avg_interval_lengths[i].append(timer.get_avg_interval_length(i))
+            cnt += 1
+            if cnt % 1000 == 0:
+                print('{}/{}'.format(cnt, total))
+                for key in interrupt_type2cnt:
+                    print('{}: {}'.format(key, sum(interrupt_type2cnt[key])/len(interrupt_type2cnt[key])))
+        except Exception as e:
+            traceback.print_exc()
+    
+    for i in range(1,5):
+        print('=================== setting {} ==================='.format(i))
+        print('avg_daily_ready_times: {}'.format(sum(avg_daily_ready_times[i])/len(avg_daily_ready_times[i])))
+        print('avg_interval_lengths: {}'.format(sum(avg_interval_lengths[i])/len(avg_interval_lengths[i])))
+
+    with open('avg_daily_ready_times.json', 'w') as f:
+        json.dump(avg_daily_ready_times, f, indent=2)
+    with open('avg_interval_lengths.json', 'w') as f:
+        json.dump(avg_daily_ready_times, f, indent=2)
+    with open('interrupt_type2cnt.json', 'w') as f:
+        json.dump(interrupt_type2cnt, f, indent=2)

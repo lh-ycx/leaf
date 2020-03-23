@@ -33,20 +33,27 @@ def build_counter(train_data, initial_counter=None):
 def build_vocab(counter, vocab_size=10000):
     pad_symbol, unk_symbol = 0, 1
     count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
-    count_pairs = count_pairs[:(vocab_size - 2)] # -2 to account for the unknown and pad symbols
-
+    
     print(count_pairs[:100])
+
+    
+    count_pairs = count_pairs[:(vocab_size - 2)] # -2 to account for the unknown and pad symbols
 
     words, _ = list(zip(*count_pairs))
 
-    print(words[:100])
+    # print(words[:100])
+
     vocab = {}
     vocab['<PAD>'] = pad_symbol
     vocab['<UNK>'] = unk_symbol
 
     for i, w in enumerate(words):
+        if w == '<num>':
+            continue
         if w != '<PAD>':
             vocab[w] = i + 1
+
+    # print(vocab)    
 
     return {'vocab': vocab, 'size': vocab_size, 'unk_symbol': unk_symbol, 'pad_symbol': pad_symbol}
 
@@ -79,6 +86,7 @@ def main():
         counter = build_counter(train_data, initial_counter=counter)
         print()
         train_data = {}
+        break
 
     if counter is not None:
         vocab = build_vocab(counter, vocab_size=args.vocab_size)

@@ -9,7 +9,7 @@ from tensorflow.contrib import rnn
 
 from model import Model
 
-VOCABULARY_PATH = '../data/big_reddit/vocab/reddit_vocab.pck'
+VOCABULARY_PATH = '../data/realworld_co/vocab/reddit_vocab.pck'
 
 
 # Code adapted from https://github.com/tensorflow/models/blob/master/tutorials/rnn/ptb/ptb_word_lm.py

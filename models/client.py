@@ -16,7 +16,7 @@ class Client:
     
     d = None
     try:
-        with open('/gpfs/share/home/1901213357/ycx/backup/data/trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
+        with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
             d = json.load(f)
     except FileNotFoundError as e:
         d = None
@@ -41,12 +41,15 @@ class Client:
         if d == None:
             cfg.user_trace = False
         # uid = random.randint(0, len(d))
-        if cfg.user_trace:
+        if cfg.user_trace and cfg.real_world == False:
             uid = random.sample(list(d.keys()), 1)[0]
             self.timer = Timer(ubt=d[str(uid)], google=True)
             while self.timer.isSuccess != True:
                 uid = random.sample(list(d.keys()), 1)[0]
                 self.timer = Timer(ubt=d[str(uid)], google=True)
+        elif cfg.user_trace and cfg.real_world == True:
+            uid = self.id
+            self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
             self.timer = Timer(None)
             self.deadline = sys.maxsize # deadline is meaningless without user trace
