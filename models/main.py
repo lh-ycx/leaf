@@ -186,8 +186,8 @@ def main():
             logger.info('--------------------- test result ---------------------')
             logger.info('attended_clients num: {}/{}'.format(len(attended_clients), len(clients)))
             # logger.info('attended_clients: {}'.format(attended_clients))
-            # test_clients = random.sample(clients, min(100,len(clients)))
-            test_num = min(len(clients), 100)
+            # test_num = min(len(clients), 100)
+            test_num = len(clients)
             if (i + 1) % (10*eval_every) == 0 or (i + 1) == num_rounds:
                 test_num = len(clients)
                 with open('attended_clients_{}.json'.format(config_name), 'w') as fp:

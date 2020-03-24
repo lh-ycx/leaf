@@ -59,18 +59,20 @@ class ClientModel(Model):
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
             
             # unknown and padding are always regarded False, so change the labels to an impossible value
-            unk_tensor = tf.fill(tf.shape(labels) , self.unk_symbol)
-            pred_unk = tf.cast(tf.equal(labels, unk_tensor), tf.int32)
-            labels_rm_unk = tf.add(labels, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
-            pad_tensor = tf.fill(tf.shape(labels) , self.pad_symbol)
-            pred_pad = tf.cast(tf.equal(labels, pad_tensor), tf.int32)
+            labels_reshaped = tf.reshape(labels, [-1])
+            
+            unk_tensor = tf.fill(tf.shape(labels_reshaped) , self.unk_symbol)
+            pred_unk = tf.cast(tf.equal(labels_reshaped, unk_tensor), tf.int32)
+            labels_rm_unk = tf.add(labels_reshaped, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
+            pad_tensor = tf.fill(tf.shape(labels_reshaped) , self.pad_symbol)
+            pred_pad = tf.cast(tf.equal(labels_reshaped, pad_tensor), tf.int32)
             labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(pred_pad, [tf.shape(logits)[1]]))
             
-            labels_reshaped = tf.reshape(labels_rm_pad, [-1])
+            
             # pred = tf.cast(tf.argmax(logits, 1), tf.int32)
-            pred = tf.nn.in_top_k(logits, labels_reshaped, k = 1)
-            top3_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 3)
-            top5_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 5)
+            pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 1)
+            top3_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 3)
+            top5_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 5)
             correct_pred = tf.cast(pred, tf.int32)
             top3_correct_pred = tf.cast(top3_pred, tf.int32)
             top5_correct_pred = tf.cast(top5_pred, tf.int32)
