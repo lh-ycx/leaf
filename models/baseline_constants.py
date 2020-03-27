@@ -36,6 +36,21 @@ MAIN_PARAMS = {
         'medium': (8, 2, 2),
         'large': (20, 1, 2)
         },
+    'realworld_br': {
+        'small': (6, 2, 2),
+        'medium': (8, 2, 2),
+        'large': (20, 1, 2)
+        },
+    'realworld_co': {
+        'small': (6, 2, 2),
+        'medium': (8, 2, 2),
+        'large': (20, 1, 2)
+        },
+    'realworld_id': {
+        'small': (6, 2, 2),
+        'medium': (8, 2, 2),
+        'large': (20, 1, 2)
+        },
 }
 """dict: Specifies execution parameters (tot_num_rounds, eval_every_num_rounds, clients_per_round)"""
 
@@ -51,6 +66,12 @@ MODEL_PARAMS = {
     'reddit.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
     'big_reddit.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
     'big_reddit.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_br.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_br.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_co.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_co.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_id.stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
+    'realworld_id.topk_stacked_lstm': (0.0003, 10, 256, 2), # lr, seq_len, num_hidden, num_layers
 }
 """dict: Model specific parameter specification"""
 

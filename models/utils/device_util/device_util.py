@@ -168,7 +168,6 @@ class Device_Util:
         elif self.model == 'stacked_lstm' and self.dataset == 'shakespeare':
             train_time_per_batch = np.random.normal(shakespeare_mean[ii], shakespeare_std[ii]) / 1000
         else:
-            # TODO get time by layer
             train_time_per_batch = np.random.normal(reddit_mean[ii], reddit_std[ii]) / 1000
         return num_epoch * ((num_sample-1)//batch_size + 1) * train_time_per_batch
 

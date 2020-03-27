@@ -9,7 +9,7 @@ from tensorflow.contrib import rnn
 
 from model import Model
 
-VOCABULARY_PATH = '../data/big_reddit/vocab/reddit_vocab.pck'
+VOCABULARY_PATH = '../data/realworld_co/vocab/reddit_vocab.pck'
 
 
 # Code adapted from https://github.com/tensorflow/models/blob/master/tutorials/rnn/ptb/ptb_word_lm.py
@@ -58,38 +58,50 @@ class ClientModel(Model):
             
             logits = tf.nn.xw_plus_b(output, softmax_w, softmax_b)
             
-            # unknown and padding are always regarded False, so change the labels to an impossible value
-            unk_tensor = tf.fill(tf.shape(labels) , self.unk_symbol)
-            pred_unk = tf.cast(tf.equal(labels, unk_tensor), tf.int32)
-            labels_rm_unk = tf.add(labels, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
-            pad_tensor = tf.fill(tf.shape(labels) , self.pad_symbol)
-            pred_pad = tf.cast(tf.equal(labels, pad_tensor), tf.int32)
-            labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(pred_pad, [tf.shape(logits)[1]]))
-            
-            labels_reshaped = tf.reshape(labels_rm_pad, [-1])
-            # pred = tf.cast(tf.argmax(logits, 1), tf.int32)
-            pred = tf.nn.in_top_k(logits, labels_reshaped, k = 1)
-            top3_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 3)
-            top5_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 5)
-            correct_pred = tf.cast(pred, tf.int32)
-            top3_correct_pred = tf.cast(top3_pred, tf.int32)
-            top5_correct_pred = tf.cast(top5_pred, tf.int32)
+            # to calculate top 1, 3, 5 acc
+            self.labels_reshaped = tf.reshape(labels, [-1])
+            self.top_5_indices = tf.nn.top_k(logits, k = 5).indices
             
             '''
+            unk_tensor = tf.fill(tf.shape(labels_reshaped) , self.unk_symbol)
+            pred_unk = tf.cast(tf.equal(labels_reshaped, unk_tensor), tf.int32)
+            labels_rm_unk = tf.add(labels_reshaped, tf.multiply(pred_unk, [tf.shape(logits)[1]]))
+            pad_tensor = tf.fill(tf.shape(labels_reshaped) , self.pad_symbol)
+            pred_pad = tf.cast(tf.equal(labels_reshaped, pad_tensor), tf.int32)
+            labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(pred_pad, [tf.shape(logits)[1]]))
+            # self.labels_rm_pad = tf.add(labels_rm_unk, tf.multiply(10*pred_pad, [tf.shape(logits)[1]]))
+            
+            
+            # self.logits_shape = tf.shape(logits) # [50, 10000]
+            # self.labels_reshaped_shape = tf.shape(labels_reshaped) [50]
+
+            # pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            # self.w_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 1)
+            # self.ww_pred = tf.nn.in_top_k(logits, labels_reshaped, k = 1)
+            w_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 1)
+            top3_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 3)
+            top5_pred = tf.nn.in_top_k(logits, labels_rm_pad, k = 5)
+            self.w_correct_pred = tf.cast(w_pred, tf.int32)
+            w_correct_pred = tf.cast(w_pred, tf.int32)
+            top3_correct_pred = tf.cast(top3_pred, tf.int32)
+            top5_correct_pred = tf.cast(top5_pred, tf.int32)
+            '''
+
+            # correct predictions
+            labels_reshaped = tf.reshape(labels, [-1])
+            pred = tf.cast(tf.argmax(logits, 1), tf.int32)
+            correct_pred = tf.cast(tf.equal(pred, labels_reshaped), tf.int32)
+            
             # predicting unknown is always considered wrong
             unk_tensor = tf.fill(tf.shape(labels_reshaped), self.unk_symbol)
             pred_unk = tf.cast(tf.equal(pred, unk_tensor), tf.int32)
             correct_unk = tf.multiply(pred_unk, correct_pred)
-            top3_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 3), tf.int32)
-            top5_correct_unk = tf.cast(tf.nn.in_top_k(logits, unk_tensor, k = 5), tf.int32)
 
             # predicting padding is always considered wrong
             pad_tensor = tf.fill(tf.shape(labels_reshaped), self.pad_symbol)
             pred_pad = tf.cast(tf.equal(pred, pad_tensor), tf.int32)
             correct_pad = tf.multiply(pred_pad, correct_pred)
-            top3_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 3), tf.int32)
-            top5_correct_pad = tf.cast(tf.nn.in_top_k(logits, pad_tensor, k = 5), tf.int32)
-            '''
+            
 
             # Reshape logits to be a 3-D tensor for sequence loss
             logits = tf.reshape(logits, [-1, self.seq_len, self.vocab_size])
@@ -117,8 +129,10 @@ class ClientModel(Model):
             #                     tf.count_nonzero(top3_correct_pred) - tf.count_nonzero(top3_correct_unk) - tf.count_nonzero(top3_correct_pad),
             #                    tf.count_nonzero(top5_correct_pred) - tf.count_nonzero(top5_correct_unk) - tf.count_nonzero(top5_correct_pad) ]
 
-            eval_metric_ops = [tf.count_nonzero(correct_pred), tf.count_nonzero(top3_correct_pred), tf.count_nonzero(top5_correct_pred)]
-
+            # eval_metric_ops = [tf.count_nonzero(correct_pred), tf.count_nonzero(top3_correct_pred), tf.count_nonzero(top5_correct_pred)]
+            # eval_metric_ops = [tf.count_nonzero(w_correct_pred), tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad)]
+            eval_metric_ops = tf.count_nonzero(correct_pred) - tf.count_nonzero(correct_unk) - tf.count_nonzero(correct_pad)
+        
         return features, labels, train_op, eval_metric_ops, self.cost
 
     def _build_rnn_graph(self, inputs):
@@ -224,23 +238,30 @@ class ClientModel(Model):
 
     def test(self, data, batch_size=5):
         # tot_acc, tot_samples = 0, 0
-        tot_acc = np.array([0.0,0.0,0.0],dtype=float)
+        tot_acc = np.array([0.0] * 6,dtype=float)
         tot_samples = 0
         tot_loss, tot_batches = 0, 0
 
         for input_data, target_data, input_lengths, input_mask in self.batch_data(data, batch_size):
 
             with self.graph.as_default():
-                acc, loss = self.sess.run(
-                    [self.eval_metric_ops, self.loss], 
+                acc, targets, top_5_indices, loss = self.sess.run(
+                    [self.eval_metric_ops, self.labels_reshaped, self.top_5_indices, self.loss], 
                     feed_dict={
                         self.features: input_data,
                         self.labels: target_data,
                         self.sequence_length_ph: input_lengths, 
                         self.sequence_mask_ph: input_mask,
                     })
-            
-            tot_acc += acc
+                ks = [1,3,5]
+                for k in ks:
+                    for i in range(len(targets)):
+                        target = targets[i]
+                        if target in top_5_indices[i][:k] and target != self.unk_symbol and target != self.pad_symbol:
+                            tot_acc[k] += 1
+                
+                        
+            tot_acc[0] += acc
             tot_samples += np.sum(input_lengths)
 
             tot_loss += loss

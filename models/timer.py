@@ -243,6 +243,9 @@ class Timer:
         if self.ubt == None:
             return True
         
+        if self.isSuccess == False:
+            return False
+
         if not reference:
             round_start -= self.refer_second
         now = int(round_start + time_window - self.trace_start) % (int(self.trace_end - self.trace_start)) + self.trace_start
@@ -262,6 +265,9 @@ class Timer:
 
         if self.ubt == None:
             return sys.maxsize
+        
+        if self.isSuccess == False:
+            return 0.0
         
         def overlay(S, E, t0, t1):
             # overlay of [S, E] and [t0, t1]
