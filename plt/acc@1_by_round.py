@@ -9,14 +9,14 @@ import sys
 
 Es = [1,5,20]
 colors = ['blue', 'green', 'orange']
-log_dir = '../models/'
+log_dir = '../exp_1_remake/'
 dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
     cnt = 0
     for E in Es:
-        with open('{}{}_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
+        with open('{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         cnt+=1
     cnt = 0
     for E in Es:
-        with open('{}{}_no_trace_{}.cfg.log'.format(log_dir,dataset,E), 'r') as f:
+        with open('{}/{}/{}_no_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
             x = []
             y = []
             
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     
     font = {
             'weight' : 'normal',
-            'size'   : 15,
+            'size'   : 20,
             }
     plt.xlabel('round num', font)
     plt.ylabel('accuracy', font)
