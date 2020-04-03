@@ -299,6 +299,55 @@ class Timer:
                 available_time += overlay(self.trace_start, end_, item[0], item[1])
                 trace_available += item[1] - item[0]
             available_time += trace_available * (end - self.trace_end) // (self.trace_end - self.trace_start)
-        # if available_time < 60:
-            # logger.info('available time: {}'.format(available_time))
         return available_time
+    
+    def check_comm_suc(self, time_start, time_window, reference=True):
+        """
+        check the available time in [time_start, time_start + time_window] is time_window or not 
+        (i.e. no interruption is allowed)
+        :param time_start: t
+        :param time_window:  delta t
+        :return: True or False
+        """
+        if self.ubt == None: # no trace mode is always true
+            return True
+        if self.isSuccess == False:
+            return False
+        
+        def overlay(S, E, t0, t1):
+            # overlay of [S, E] and [t0, t1]
+            res = 0
+            if t0 <= S <= t1 <= E:
+                res += t1 - S
+            elif S <= t0 <= t1 <= E:
+                res += t1 - t0
+            elif S <= t0 <= E <= t1:
+                res += E - t0
+            elif t0 <= S <= E <= t1:
+                res += E - S
+            return res
+
+        if not reference:
+            time_start -= self.refer_second
+        start = int(time_start - self.trace_start) % (int(self.trace_end - self.trace_start)) + self.trace_start
+        end = start + time_window
+        available_time = 0
+
+        if end <= self.trace_end:
+            for item in self.ready_time:
+                available_time += overlay(start, end, item[0], item[1])
+        else:
+            trace_available = 0
+            for item in self.ready_time:
+                available_time += overlay(start, self.trace_end, item[0], item[1])
+                end_ = int(end - self.trace_start) % (int(self.trace_end - self.trace_start)) + self.trace_start
+                available_time += overlay(self.trace_start, end_, item[0], item[1])
+                trace_available += item[1] - item[0]
+            available_time += trace_available * (end - self.trace_end) // (self.trace_end - self.trace_start)
+        if available_time - time_window > 0.01:
+            logger.error('???')
+            logger.error('guid: {}, time_start: {}, time_window: {}'.format(self.guid, time_start, time_window))
+            logger.error('available_time: {}'.format(available_time))
+            logger.error('ready_time: {}'.format(self.ready_time))
+            assert False
+        return abs(available_time - time_window) < 0.01

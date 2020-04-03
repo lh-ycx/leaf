@@ -83,6 +83,7 @@ def main():
     # Create client model, and share params with server model
     tf.reset_default_graph()
     client_model = ClientModel(cfg.seed, *model_params)
+    logger.info('model size: {}'.format(client_model.size))
 
     # Create clients
     logger.info('======================Setup Clients==========================')
@@ -152,12 +153,14 @@ def main():
         server.pass_time(time_window)
         
         # 1.3.1 show how many clients will upload successfully
+        '''
         suc_c = 0
         for c in online_clients:
             c.set_deadline(deadline)
             if c.upload_suc(server.get_cur_time(), num_epochs=cfg.num_epochs, batch_size=cfg.batch_size, minibatch=cfg.minibatch):
                 suc_c += 1
         logger.info('{} clients will upload successfully at most'.format(suc_c))
+        '''
         
         # 2. configuration stage
         logger.info('--------------------- configuration stage ---------------------')
@@ -243,7 +246,7 @@ def create_clients(users, groups, train_data, test_data, model, cfg):
     cnt = 0
     clients = []
     for u, g in zip(users, groups):
-        c = Client(u, g, train_data[u], test_data[u], model, Device(cfg), cfg)
+        c = Client(u, g, train_data[u], test_data[u], model, Device(cfg, model_size=model.size), cfg)
         if len(c.train_data["x"]) == 0:
             continue
         clients.append(c)

@@ -34,7 +34,7 @@ class Config():
         self.mid_upload_time = [10.0, 1.0]
         self.small_upload_time = [15.0, 1.0]
         '''
-        self.upload_time = [10.0, 1.0]  # assume that upload time is influenced by network condition
+        self.upload_time = [10.0, 1.0]  # now its no use in config
         '''
         # speed is no more used and replaced by training time provided by device_util
         self.big_speed = [150.0, 1.0]
