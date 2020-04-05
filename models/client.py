@@ -17,9 +17,7 @@ class Client:
     d = None
     try:
         with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
-            d = json.load(f)
-        with open('/home/ubuntu/storage/ycx/feb_trace/speed_distri.json', 'r') as f:
-            speed_distri = json.load(f) 
+            d = json.load(f) 
     except FileNotFoundError as e:
         d = None
         logger.warn('no user behavior trace was found, running in no-trace mode')
@@ -33,7 +31,7 @@ class Client:
         self.deadline = 1 # < 0 for unlimited
         self.cfg = cfg
         
-        self.device = device  # if device == none, it will use real time as train time and set upload time as 0
+        self.device = device  # if device == none, it will use real time as train time, and set upload/download time as 0
         if self.device == None:
             logger.warn('client {} with no device init, upload time will be set as 0 and speed will be the gpu speed'.format(self.id))
             self.upload_time = 0
@@ -84,9 +82,9 @@ class Client:
             download_time = self.device.get_download_time()
             upload_time = self.device.get_upload_time()
         train_time_limit = self.deadline - download_time - upload_time
-        if train_time_limit < 0:
+        if train_time_limit <= 0:
             train_time_limit = 0.001
-        available_time = self.timer.get_available_time(start_t + download_time, train_time_limit)
+        
             
         def train_with_simulate_time(self, start_t, num_epochs=1, batch_size=10, minibatch=None):
             if minibatch is None:
@@ -98,7 +96,6 @@ class Client:
             train_time = self.device.get_train_time(num_data, batch_size, num_epochs)
             logger.debug('client {}: num data:{}'.format(self.id, num_data))
             logger.debug('client {}: train time:{}'.format(self.id, train_time))
-            logger.debug('client {}: available time:{}'.format(self.id, available_time))
             
             # compute num_data
             if minibatch is None:
@@ -112,21 +109,30 @@ class Client:
                 data = {'x': xs, 'y': ys}
 
             down_end_time = self.timer.get_future_time(start_t, download_time)
-            logger.info("client {} download-time-need={}, download-time-cost={} end at {}, "
+            logger.debug("client {} download-time-need={}, download-time-cost={} end at {}, "
                         .format(self.id, download_time, down_end_time-start_t, down_end_time))
 
             train_end_time = self.timer.get_future_time(down_end_time, train_time)
-            logger.info("client {} train-time-need={}, train-time-cost={} end at {}, "
+            logger.debug("client {} train-time-need={}, train-time-cost={} end at {}, "
                         .format(self.id, train_time, train_end_time-down_end_time, train_end_time))
             
             up_end_time = self.timer.get_future_time(train_end_time, upload_time)
-            logger.info("client {} upload-time-need={}, upload-time-cost={} end at {}, "
+            logger.debug("client {} upload-time-need={}, upload-time-cost={} end at {}, "
                         .format(self.id, upload_time, up_end_time-train_end_time, up_end_time))
             
             total_cost = up_end_time - start_t
-            logger.info("client {} task-time-need={}, task-time-cost={}"
+            logger.debug("client {} task-time-need={}, task-time-cost={}"
                         .format(self.id, download_time+train_time+upload_time, total_cost))
+
+            self.ori_download_time = download_time  # original
+            self.ori_train_time = train_time
+            self.ori_upload_time = upload_time
+
+            self.act_download_time = down_end_time-start_t # actual
+            self.act_train_time = train_end_time-down_end_time
+            self.act_upload_time = up_end_time-train_end_time
             
+            '''
             if not self.timer.check_comm_suc(start_t, download_time):
                 self.actual_comp = 0.0
                 download_available_time = self.timer.get_available_time(start_t, download_time)
@@ -150,6 +156,27 @@ class Client:
                 upload_available_time = self.timer.get_available_time(start_t + download_time + train_time, upload_time)
                 failed_reason = 'upload interruption: upload_time({}) > upload_available_time({})'.format(upload_time, upload_available_time)
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            '''
+            if (down_end_time-start_t) > self.deadline:
+                # download too long
+                self.actual_comp = 0.0
+                failed_reason = 'failed when downloading'
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif (train_end_time-start_t) > self.deadline:
+                # failed when training
+                train_time_limit = self.deadline - self.act_download_time
+                if train_time_limit <= 0:
+                    train_time_limit = 0.001
+                available_time = self.timer.get_available_time(start_t + self.act_download_time, train_time_limit)
+                comp = self.model.get_comp(data, num_epochs, batch_size)
+                self.actual_comp = int(comp*available_time/train_time)    # will be used in get_actual_comp
+                failed_reason = 'failed when training'
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif total_cost > self.deadline:
+                # failed when uploading
+                self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
+                failed_reason = 'failed when uploading'
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     if self.cfg.no_training:
@@ -172,6 +199,7 @@ class Client:
         
         @timeout_decorator.timeout(train_time_limit)
         def train_with_real_time_limit(self, num_epochs=1, batch_size=10, minibatch=None):
+            logger.warn('call train_with_real_time_limit()')
             start_time = time.time()
             if minibatch is None:
                 # data = self.train_data
@@ -196,6 +224,15 @@ class Client:
                     comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
             num_train_samples = len(data['y'])
             simulate_time_c = time.time() - start_time
+
+            self.ori_download_time = 0  # original
+            self.ori_train_time = simulate_time_c
+            self.ori_upload_time = 0
+
+            self.act_download_time = 0 # actual
+            self.act_train_time = simulate_time_c
+            self.act_upload_time = 0
+
             return simulate_time_c, comp, num_train_samples, update, acc, loss
         
         if self.device == None:
