@@ -14,7 +14,10 @@ dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
+    fig,ax1 = plt.subplots(figsize=(6.5, 4))
     cnt = 0
+    real_acc = [0.0] * 3
+    ideal_acc = [0.0] * 3
     for E in Es:
         with open('{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
             x = []
@@ -38,7 +41,9 @@ if __name__ == "__main__":
         x = np.array(x)
         y = np.array(y)
         plt.plot(x,y,color=colors[cnt],linewidth=0.75)
+        real_acc[cnt] = test_acc
         cnt+=1
+        
     cnt = 0
     for E in Es:
         with open('{}/{}/{}_no_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
@@ -64,8 +69,13 @@ if __name__ == "__main__":
         x = np.array(x)
         y = np.array(y)
         plt.plot(x,y,color=colors[cnt], ls='--')
+        ideal_acc[cnt] = test_acc
         cnt+=1
-    
+
+    for i in range(3):
+        print((ideal_acc[i] - real_acc[i]) / ideal_acc[i])
+
+
     # plt.grid(axis='x',color='grey',ls='--')
     # x_major_locator=MultipleLocator(24)
     # ax=plt.gca()
@@ -74,8 +84,13 @@ if __name__ == "__main__":
     
     font = {
             'weight' : 'normal',
-            'size'   : 20,
+            'size'   : 24,
             }
+    font_title = {
+            'weight' : 'normal',
+            'size'   : 28,
+            }
+    plt.title('{} by round'.format(dataset), font_title)
     plt.xlabel('round num', font)
     plt.ylabel('accuracy', font)
     plt.legend(["E = 1, with trace", 
@@ -83,5 +98,6 @@ if __name__ == "__main__":
                 "E = 20, with trace",
                 "E = 1, without trace", 
                 "E = 5, without trace", 
-                "E = 20, without trace"])
+                "E = 20, without trace"], fontsize=13)
+    fig.subplots_adjust(bottom=0.15)
     plt.savefig('{}_acc_by_round.png'.format(dataset))

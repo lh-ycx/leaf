@@ -16,10 +16,8 @@ class Client:
     
     d = None
     try:
-        with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
+        with open('/gpfs/share/home/1901213357/ycx/backup/data/trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
             d = json.load(f)
-        with open('/home/ubuntu/storage/ycx/feb_trace/speed_distri.json', 'r') as f:
-            speed_distri = json.load(f) 
     except FileNotFoundError as e:
         d = None
         logger.warn('no user behavior trace was found, running in no-trace mode')

@@ -5,8 +5,8 @@ import time
 from math import log
 import re
 
-ddls = [40,50,60,70,80,90]
-log_dir = '../exp_2/reddit/'
+ddls = [210,230,250,270,290,310,330]
+log_dir = '../models/'
 
 if __name__ == "__main__":
     plt.figure()
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     y_min = 9999999.0
     y_max = 0.0
     for ddl in ddls:
-        with open('{}reddit_ddl_{}.cfg.log'.format(log_dir, ddl), 'r') as f:
+        with open('{}femnist_ddl_5_{}.cfg.log'.format(log_dir, ddl), 'r') as f:
             suc = 0
             fail = 0
             convergence_flag = False
@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 if 'test_accuracy' in line:
                     floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                     test_acc = float(floats[0])
-                    if test_acc > 0.1:
+                    if test_acc > 0.82:
                         print(ddl, current_time)
                         x2.append(ddl)
                         y2.append(current_time)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             y.append(fail/(fail+suc))
             if convergence_flag == False:
                 x2.append(ddl)
-                y2.append(100000)
+                y2.append(1000000)
     y = np.array(y)
     print('x:{}'.format(x))
     print('y:{}'.format(y))

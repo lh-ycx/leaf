@@ -15,6 +15,7 @@ dataset = sys.argv[1]
 
 if __name__ == "__main__":
     plt.figure()
+    fig,ax1 = plt.subplots(figsize=(6.5, 4))
     cnt = 0
     for E in Es:
         with open('{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
@@ -71,8 +72,13 @@ if __name__ == "__main__":
     
     font = {
             'weight' : 'normal',
-            'size'   : 20,
+            'size'   : 24,
             }
+    font_title = {
+            'weight' : 'normal',
+            'size'   : 28,
+            }
+    plt.title('{} by time'.format(dataset), font_title)
     plt.xlabel('time line/h',font)
     plt.ylabel('accuracy',font)
     plt.legend(["E = 1, with trace", 
@@ -80,5 +86,6 @@ if __name__ == "__main__":
                 "E = 20, with trace",
                 "E = 1, without trace", 
                 "E = 5, without trace", 
-                "E = 20, without trace"])
+                "E = 20, without trace"], fontsize=13)
+    fig.subplots_adjust(bottom=0.15)
     plt.savefig('{}_acc_by_time.png'.format(dataset))
