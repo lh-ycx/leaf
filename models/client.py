@@ -110,6 +110,22 @@ class Client:
                 num_data = max(1, int(frac*len(self.train_data["x"])))
                 xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
                 data = {'x': xs, 'y': ys}
+
+            down_end_time = self.timer.get_future_time(start_t, download_time)
+            logger.info("client {} download-time-need={}, download-time-cost={} end at {}, "
+                        .format(self.id, download_time, down_end_time-start_t, down_end_time))
+
+            train_end_time = self.timer.get_future_time(down_end_time, train_time)
+            logger.info("client {} train-time-need={}, train-time-cost={} end at {}, "
+                        .format(self.id, train_time, train_end_time-down_end_time, train_end_time))
+            
+            up_end_time = self.timer.get_future_time(train_end_time, upload_time)
+            logger.info("client {} upload-time-need={}, upload-time-cost={} end at {}, "
+                        .format(self.id, upload_time, up_end_time-train_end_time, up_end_time))
+            
+            total_cost = up_end_time - start_t
+            logger.info("client {} task-time-need={}, task-time-cost={}"
+                        .format(self.id, download_time+train_time+upload_time, total_cost))
             
             if not self.timer.check_comm_suc(start_t, download_time):
                 self.actual_comp = 0.0

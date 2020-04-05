@@ -272,7 +272,10 @@ class Server:
         self._cur_time += sec
     
     def get_time_window(self):
-        return np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        tw =  np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        while tw < 0:
+            tw =  np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        return tw
     
     def save_clients_info(self):
         with open('clients_info_{}.json'.format(self.cfg.config_name), 'w') as f:

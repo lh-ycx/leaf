@@ -351,3 +351,58 @@ class Timer:
             logger.error('ready_time: {}'.format(self.ready_time))
             assert False
         return abs(available_time - time_window) < 0.01
+    
+    def get_future_time(self, cur_time, delta):
+        """
+            get the moment (time point) after delta available-time from cur_time
+            param cur_time: current-time
+            param delta: time-passed
+        """
+        future = cur_time
+        trace_len = int(self.trace_end - self.trace_start)
+        future += int(delta / trace_len) * trace_len
+        delta = delta % trace_len
+        now = int(cur_time - self.trace_start) % trace_len + self.trace_start
+
+        while delta > 0:
+            for s, e in self.ready_time:
+                if now < e:
+                    if now <= s:
+                        # skip unavailable-time
+                        future += s - now
+                        now = s
+
+                    if e - now >= delta:
+                        future += delta
+                        delta = 0
+                        # print("s={}, e={}, now={}, delta={}, future={}".format(s, e, now, delta, future))
+                        break
+                    else:
+                        future += e - now
+                        delta -= e - now
+                        now = e
+                # print("s={}, e={}, now={}, delta={}, future={}".format(s, e, now, delta, future))
+
+            if delta > 0:
+                future += self.trace_end - now
+                now = self.trace_start
+
+        return future
+        
+        
+
+
+# if __name__ == '__main__':
+#     with open('/home/ubuntu/storage/ycx/feb_trace/normalized_guid2data.json', 'r', encoding='utf-8') as f:
+#         d = json.load(f)
+#     uid = random.sample(list(d.keys()), 1)[0]
+#     timer = Timer(ubt=d[str(uid)], google=True)
+#     while timer.isSuccess != True:
+#         uid = random.sample(list(d.keys()), 1)[0]
+#         timer = Timer(ubt=d[str(uid)], google=True)
+#     print(timer.ready_time)
+#     now = timer.ready_time[0][0]
+#     for i in range(10):
+#         print(now, timer.get_future_time(now, 500))
+#         now += 10000
+
