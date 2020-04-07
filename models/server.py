@@ -77,7 +77,13 @@ class Server:
                    BYTES_READ_KEY: 0,
                    LOCAL_COMPUTATIONS_KEY: 0,
                    'acc': {},
-                   'loss': {}} for c in clients}
+                   'loss': {},
+                   'ori_d_t': 0,
+                   'ori_t_t': 0,
+                   'ori_u_t': 0,
+                   'act_d_t': 0,
+                   'act_t_t': 0,
+                   'act_u_t': 0} for c in clients}
         # for c in self.all_clients:
             # c.model.set_params(self.model)
         simulate_time = 0
@@ -127,6 +133,14 @@ class Server:
                 # logger.error('train_x: {}'.format(c.train_data['x']))
                 # logger.error('train_y: {}'.format(c.train_data['y']))
                 traceback.print_exc()
+            finally:
+                sys_metrics[c.id]['ori_d_t'] = round(c.ori_download_time, 3)
+                sys_metrics[c.id]['ori_t_t'] = round(c.ori_train_time, 3)
+                sys_metrics[c.id]['ori_u_t'] = round(c.ori_upload_time, 3)
+                
+                sys_metrics[c.id]['act_d_t'] = round(c.act_download_time, 3)
+                sys_metrics[c.id]['act_t_t'] = round(c.act_train_time, 3)
+                sys_metrics[c.id]['act_u_t'] = round(c.act_upload_time, 3)
         try:
             # logger.info('simulation time: {}'.format(simulate_time))
             sys_metrics['configuration_time'] = simulate_time
@@ -272,7 +286,10 @@ class Server:
         self._cur_time += sec
     
     def get_time_window(self):
-        return np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        tw =  np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        while tw < 0:
+            tw =  np.random.normal(self.cfg.time_window[0], self.cfg.time_window[1])
+        return tw
     
     def save_clients_info(self):
         with open('clients_info_{}.json'.format(self.cfg.config_name), 'w') as f:

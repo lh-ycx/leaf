@@ -12,6 +12,7 @@ utils/__pycache__/
 models/checkpoints/
 models/metrics/*.csv
 models/sent140/embs.json
+models/cached_timers.json
 _build/
 _templates/
 autodoc/
