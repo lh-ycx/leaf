@@ -174,7 +174,11 @@ def main():
         # 3. update stage
         logger.info('--------------------- report stage ---------------------')
         # 3.1 update global model
-        server.update_model(cfg.update_frac)
+        if cfg.compress_algo:
+            logger.info('update using compressed grads')
+            server.update_using_compressed_grad(0.1)
+        else:
+            server.update_model(0.1)
         
         # 3.2 total simulation time for this round
         # logger.info("simulating round {} used {} seconds".format(i+1, time.time()-round_start_time))

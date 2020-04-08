@@ -181,21 +181,21 @@ class Client:
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
-                        update, acc, loss = -1,-1,-1
+                        update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, num_data)
-                        update, acc, loss = -1,-1,-1
+                        update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, num_data)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
-                return simulate_time_c, comp, num_train_samples, update, acc, loss
+                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad
         
         @timeout_decorator.timeout(train_time_limit)
         def train_with_real_time_limit(self, num_epochs=1, batch_size=10, minibatch=None):
@@ -207,9 +207,9 @@ class Client:
                 xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
                 data = {'x': xs, 'y': ys}
                 if self.cfg.no_training:
-                    comp, update, acc, loss = -1,-1,-1,-1
+                    comp, update, acc, loss, grad = -1,-1,-1,-1,-1
                 else:
-                    comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                    comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
             else:
                 frac = min(1.0, minibatch)
                 num_data = max(1, int(frac*len(self.train_data["x"])))
@@ -219,9 +219,9 @@ class Client:
                 # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                 num_epochs = 1
                 if self.cfg.no_training:
-                    comp, update, acc, loss = -1,-1,-1,-1
+                    comp, update, acc, loss, grad = -1,-1,-1,-1,-1
                 else:
-                    comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                    comp, update, acc, loss, grad = self.model.train(data, num_epochs, num_data)
             num_train_samples = len(data['y'])
             simulate_time_c = time.time() - start_time
 
@@ -233,7 +233,7 @@ class Client:
             self.act_train_time = simulate_time_c
             self.act_upload_time = 0
 
-            return simulate_time_c, comp, num_train_samples, update, acc, loss
+            return simulate_time_c, comp, num_train_samples, update, acc, loss, grad
         
         if self.device == None:
             return train_with_real_time_limit(self, num_epochs, batch_size, minibatch)

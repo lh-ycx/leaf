@@ -14,6 +14,9 @@ class ClientModel(Model):
     def __init__(self, seed, lr, num_classes, input_dim):
         self.num_classes = num_classes
         self.input_dim = input_dim
+
+        self.model_name = os.path.abspath(__file__)
+        
         super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):
@@ -45,6 +48,9 @@ class ClientModel(Model):
         for batched_x, batched_y in batch_data(data, batch_size, self.seed):
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
+
+            self.last_features = input_data
+            self.last_labels = target_data
 
             with self.graph.as_default():
                 self.sess.run(

@@ -5,6 +5,9 @@ from utils.logger import Logger
 from collections import defaultdict
 import json
 
+from grad_compress.grad_drop import grad_drop_updater
+from grad_compress.sign_sgd import sign_sgd_updater
+
 from baseline_constants import BYTES_WRITTEN_KEY, BYTES_READ_KEY, LOCAL_COMPUTATIONS_KEY
 
 L = Logger()
@@ -20,6 +23,7 @@ class Server:
         self.selected_clients = []
         self.all_clients = clients
         self.updates = []
+        self.gradiants = []
         self.clients_info = defaultdict(dict)
         for c in self.all_clients:
             self.clients_info[str(c.id)]["comp"] = 0
@@ -97,7 +101,7 @@ class Server:
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
                 start_t = self.get_cur_time()
-                simulate_time_c, comp, num_samples, update, acc, loss = c.train(start_t, num_epochs, batch_size, minibatch)       
+                simulate_time_c, comp, num_samples, update, acc, loss, gradiant = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 logger.debug('client {} num_samples: {}'.format(c.id, num_samples))
                 logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
@@ -114,6 +118,16 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
+                # compress gradiant
+                if not self.cfg.compress_algo:
+                    self.gradiants.append((c.id, num_samples, gradiant))
+                elif self.cfg.compress_algo == 'sign_sgd':
+                    grad_compressed, bit_before, bit_after = sign_sgd_updater.GradientCompress(gradiant)
+                    self.gradiants.append((c.id, num_samples, grad_compressed))
+                elif self.cfg.compress_algo == 'grad_drop':
+                    grad_compressed, bit_before, bit_after = grad_drop_updater.GradientCompress(gradiant)
+                    self.gradiants.append((c.id, num_samples, grad_compressed))
+                
                 norm_comp = int(comp/self.client_model.flops)
                 if norm_comp == 0:
                     logger.error('comp: {}, flops: {}'.format(comp, self.client_model.flops))
@@ -165,6 +179,7 @@ class Server:
             if self.cfg.no_training:
                 logger.info('pseduo-update because of no_training setting.')
                 self.updates = []
+                self.gradiants = []
                 return
             if self.cfg.aggregate_algorithm == 'FedAvg':
                 # aggregate all the clients
@@ -225,7 +240,84 @@ class Server:
             logger.info('round failed, global model maintained.')
         
         self.updates = []
+        self.gradiants = []
 
+    def update_using_compressed_grad(self, update_frac):
+        logger.info('{} of {} clients upload successfully'.format(len(self.updates), len(self.selected_clients)))
+        if len(self.gradiants) / len(self.selected_clients) >= update_frac:        
+            logger.info('round succeed, updating global model...')
+            if self.cfg.no_training:
+                logger.info('pseduo-update because of no_training setting.')
+                self.updates = []
+                self.gradiants = []
+                return
+            if self.cfg.aggregate_algorithm == 'FedAvg':
+                # aggregate all the clients
+                logger.info('Aggragate with FedAvg after grad compress')
+                used_client_ids = [cid for (cid, _, _) in self.gradiants]
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_grad) in self.gradiants:
+                    total_weight += client_samples
+                    for i, v in enumerate(client_grad):
+                        base[i] += (client_samples * v.astype(np.float32))
+                for c in self.all_clients:
+                    if c.id not in used_client_ids:
+                        total_weight += c.num_train_samples
+                averaged_grad = [v / total_weight for v in base]
+                # update with grad                    
+                if self.cfg.compress_algo == 'sign_sgd':
+                    averaged_grad = sign_sgd_updater.MajorityVote(averaged_grad)
+                self.model = self.client_model.update_with_gradiant(averaged_grad)                    
+
+            elif self.cfg.aggregate_algorithm == 'SucFedAvg':
+                # aggregate the successfully uploaded clients
+                logger.info('Aggragate with SucFedAvg after grad compress')
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_grad) in self.gradiants:
+                    # logger.info('cid: {}, client_samples: {}, client_model: {}'.format(cid, client_samples, client_model[0][0][:5]))
+                    total_weight += client_samples
+                    # logger.info("client-grad: {}, c-g[0]: {}".format(type(client_grad), type(client_grad[0])))
+                    for i, v in enumerate(client_grad):
+                        base[i] += (client_samples * v.astype(np.float32))
+                averaged_grad = [v / total_weight for v in base]
+                # update with grad                    
+                if self.cfg.compress_algo == 'sign_sgd':
+                    averaged_grad = sign_sgd_updater.MajorityVote(averaged_grad)
+                self.model = self.client_model.update_with_gradiant(averaged_grad)
+
+            elif self.cfg.aggregate_algorithm == 'SelFedAvg':
+                # aggregate the selected clients
+                logger.info('Aggragate with SelFedAvg after grad compress')
+                used_client_ids = [cid for (cid, _, _) in self.gradiants]
+                total_weight = 0.
+                base = [0] * len(self.updates[0][2])
+                for (cid, client_samples, client_grad) in self.gradiants:
+                    total_weight += client_samples
+                    for i, v in enumerate(client_grad):
+                        base[i] += (client_samples * v.astype(np.float32))
+                for c in self.selected_clients:
+                    if c.id not in used_client_ids:
+                        # c was failed in this round but was selected
+                        total_weight += c.num_train_samples  # assume that all train_data is used to update
+                averaged_grad = [v / total_weight for v in base]
+                # update with grad                    
+                if self.cfg.compress_algo == 'sign_sgd':
+                    averaged_grad = sign_sgd_updater.MajorityVote(averaged_grad)
+                self.model = self.client_model.update_with_gradiant(averaged_grad)
+                
+            else:
+                # not supported aggregating algorithm
+                logger.error('not supported aggregating algorithm: {}'.format(self.cfg.aggregate_algorithm))
+                assert False
+                
+        else:
+            logger.info('round failed, global model maintained.')
+        
+        self.updates = []
+        self.gradiants = []
+    
     def test_model(self, clients_to_test, set_to_use='test'):
         """Tests self.model on given clients.
 
