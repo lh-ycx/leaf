@@ -118,15 +118,7 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
-                # compress gradiant
-                if not self.cfg.compress_algo:
-                    self.gradiants.append((c.id, num_samples, gradiant))
-                elif self.cfg.compress_algo == 'sign_sgd':
-                    grad_compressed, bit_before, bit_after = sign_sgd_updater.GradientCompress(gradiant)
-                    self.gradiants.append((c.id, num_samples, grad_compressed))
-                elif self.cfg.compress_algo == 'grad_drop':
-                    grad_compressed, bit_before, bit_after = grad_drop_updater.GradientCompress(gradiant)
-                    self.gradiants.append((c.id, num_samples, grad_compressed))
+                self.gradiants.append((c.id, num_samples, gradiant))
                 
                 norm_comp = int(comp/self.client_model.flops)
                 if norm_comp == 0:

@@ -9,6 +9,9 @@ from utils.logger import Logger
 from device import Device
 from timer import Timer
 
+from grad_compress.grad_drop import grad_drop_updater
+from grad_compress.sign_sgd import sign_sgd_updater
+
 L = Logger()
 logger = L.get_logger()
 
@@ -195,6 +198,16 @@ class Client:
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
+
+                # gradiant compress
+                if grad != -1 and self.cfg.compress_algo:
+                    if self.cfg.compress_algo == 'sign_sgd':
+                        grad, size_old, size_new = sign_sgd_updater.GradientCompress(grad)
+                    elif self.cfg.compress_algo == 'grad_drop':
+                        grad, size_old, size_new = grad_drop_updater.GradientCompress(grad)
+                    else:
+                        logger.error("compress algorithm is not defined")
+                
                 return simulate_time_c, comp, num_train_samples, update, acc, loss, grad
         
         @timeout_decorator.timeout(train_time_limit)
@@ -232,6 +245,15 @@ class Client:
             self.act_download_time = 0 # actual
             self.act_train_time = simulate_time_c
             self.act_upload_time = 0
+            
+            # gradiant compress
+            if grad != -1 and self.cfg.compress_algo:
+                if self.cfg.compress_algo == 'sign_sgd':
+                    grad, size_old, size_new = sign_sgd_updater.GradientCompress(grad)
+                elif self.cfg.compress_algo == 'grad_drop':
+                    grad, size_old, size_new = grad_drop_updater.GradientCompress(grad)
+                else:
+                    logger.error("compress algorithm is not defined")
 
             return simulate_time_c, comp, num_train_samples, update, acc, loss, grad
         

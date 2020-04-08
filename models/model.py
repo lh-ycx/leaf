@@ -77,13 +77,11 @@ class Model(ABC):
         return gradients
     
     def update_with_gradiant(self, gradients):
-        with self.graph.as_default():
-            all_vars = tf.trainable_variables()[1:]
-            update_op = self.optimizer.apply_gradients(zip(gradients, all_vars))
-            self.sess.run(update_op)
-            model_params = self.sess.run(tf.trainable_variables())
-        
-        return model_params
+        params = self.get_params()
+        for i in range(len(gradients)):
+            params[i] += gradients[i]*self.lr
+        self.set_params(params)
+        return params
 
     @property
     def optimizer(self):
@@ -126,6 +124,7 @@ class Model(ABC):
         loss = train_reslt['loss']
         logger.info('before: {}'.format(loss))
         '''
+        params_old= self.get_params()
         
         for i in range(num_epochs):
             self.run_epoch(data, batch_size)
@@ -136,7 +135,11 @@ class Model(ABC):
         
         update = self.get_params()
         comp = num_epochs * math.ceil(len(data['y'])/batch_size) * batch_size * self.flops
-        return comp, update, acc, loss, self.get_gradients()
+
+        grad = []
+        for i in range(len(update)):
+            grad.append((update[i]-params_old[i])/self.lr)
+        return comp, update, acc, loss, grad
 
     def run_epoch(self, data, batch_size):
 
