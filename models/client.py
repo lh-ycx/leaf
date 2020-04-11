@@ -9,6 +9,9 @@ from utils.logger import Logger
 from device import Device
 from timer import Timer
 
+from grad_compress.grad_drop import GDropUpdate
+from grad_compress.sign_sgd import SignSGDUpdate
+
 L = Logger()
 logger = L.get_logger()
 
@@ -30,6 +33,15 @@ class Client:
         self.eval_data = eval_data
         self.deadline = 1 # < 0 for unlimited
         self.cfg = cfg
+        
+        self.compressor = None
+        if self.cfg.compress_algo:
+            if self.cfg.compress_algo == 'sign_sgd':
+                self.compressor = SignSGDUpdate()
+            elif self.cfg.compress_algo == 'grad_drop':
+                self.compressor = GDropUpdate()
+            else:
+                logger.error("compress algorithm is not defined")
         
         self.device = device  # if device == none, it will use real time as train time, and set upload/download time as 0
         if self.device == None:
@@ -72,18 +84,8 @@ class Client:
             comp: number of FLOPs executed in training process
             num_samples: number of samples used in training
             update: set of weights
-            update_size: number of bytes in update
+            acc, loss, grad, update_size
         """
-
-        if self.device == None:
-            download_time = 0.0
-            upload_time = 0.0
-        else:
-            download_time = self.device.get_download_time()
-            upload_time = self.device.get_upload_time()
-        train_time_limit = self.deadline - download_time - upload_time
-        if train_time_limit <= 0:
-            train_time_limit = 0.001
         
             
         def train_with_simulate_time(self, start_t, num_epochs=1, batch_size=10, minibatch=None):
@@ -108,6 +110,9 @@ class Client:
                 xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
                 data = {'x': xs, 'y': ys}
 
+            download_time = self.device.get_download_time()
+            upload_time = self.device.get_upload_time(self.model.size) # will be re-calculated after training
+            
             down_end_time = self.timer.get_future_time(start_t, download_time)
             logger.debug("client {} download-time-need={}, download-time-cost={} end at {}, "
                         .format(self.id, download_time, down_end_time-start_t, down_end_time))
@@ -120,9 +125,9 @@ class Client:
             logger.debug("client {} upload-time-need={}, upload-time-cost={} end at {}, "
                         .format(self.id, upload_time, up_end_time-train_end_time, up_end_time))
             
-            total_cost = up_end_time - start_t
-            logger.debug("client {} task-time-need={}, task-time-cost={}"
-                        .format(self.id, download_time+train_time+upload_time, total_cost))
+            # total_cost = up_end_time - start_t
+            # logger.debug("client {} task-time-need={}, task-time-cost={}"
+            #             .format(self.id, download_time+train_time+upload_time, total_cost))
 
             self.ori_download_time = download_time  # original
             self.ori_train_time = train_time
@@ -130,8 +135,10 @@ class Client:
 
             self.act_download_time = down_end_time-start_t # actual
             self.act_train_time = train_end_time-down_end_time
-            self.act_upload_time = up_end_time-train_end_time
+            self.act_upload_time = up_end_time-train_end_time   # maybe decrease for the use of conpression algorithm
             
+            self.update_size = self.model.size
+
             '''
             if not self.timer.check_comm_suc(start_t, download_time):
                 self.actual_comp = 0.0
@@ -160,6 +167,7 @@ class Client:
             if (down_end_time-start_t) > self.deadline:
                 # download too long
                 self.actual_comp = 0.0
+                self.update_size = 0
                 failed_reason = 'failed when downloading'
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             elif (train_end_time-start_t) > self.deadline:
@@ -170,33 +178,51 @@ class Client:
                 available_time = self.timer.get_available_time(start_t + self.act_download_time, train_time_limit)
                 comp = self.model.get_comp(data, num_epochs, batch_size)
                 self.actual_comp = int(comp*available_time/train_time)    # will be used in get_actual_comp
+                self.update_size = 0
                 failed_reason = 'failed when training'
-                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-            elif total_cost > self.deadline:
-                # failed when uploading
-                self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
-                failed_reason = 'failed when uploading'
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
-                        update, acc, loss = -1,-1,-1
+                        update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, num_data)
-                        update, acc, loss = -1,-1,-1
+                        update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
-                return simulate_time_c, comp, num_train_samples, update, acc, loss
-        
+
+                # gradiant compress
+                if self.compressor != None and not self.cfg.no_training:
+                    grad, size_old, size_new = self.compressor.GradientCompress(grad)
+                    self.update_size = self.update_size*size_new/size_old
+                    # re-calculate upload_time
+                    upload_time = self.device.get_upload_time(self.update_size)
+                    self.ori_upload_time = upload_time
+                    up_end_time = self.timer.get_future_time(train_end_time, upload_time)
+                    self.act_upload_time = up_end_time-train_end_time
+
+
+                
+                total_cost = self.act_download_time + self.act_train_time + self.act_upload_time
+                if total_cost > self.deadline:
+                    # failed when uploading
+                    self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
+                    failed_reason = 'failed when uploading'
+                    # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
+                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                
+                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size
+        '''
+        # Deprecated
         @timeout_decorator.timeout(train_time_limit)
         def train_with_real_time_limit(self, num_epochs=1, batch_size=10, minibatch=None):
             logger.warn('call train_with_real_time_limit()')
@@ -207,9 +233,9 @@ class Client:
                 xs, ys = zip(*random.sample(list(zip(self.train_data["x"], self.train_data["y"])), num_data))
                 data = {'x': xs, 'y': ys}
                 if self.cfg.no_training:
-                    comp, update, acc, loss = -1,-1,-1,-1
+                    comp, update, acc, loss, grad = -1,-1,-1,-1,-1
                 else:
-                    comp, update, acc, loss = self.model.train(data, num_epochs, batch_size)
+                    comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
             else:
                 frac = min(1.0, minibatch)
                 num_data = max(1, int(frac*len(self.train_data["x"])))
@@ -219,9 +245,9 @@ class Client:
                 # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                 num_epochs = 1
                 if self.cfg.no_training:
-                    comp, update, acc, loss = -1,-1,-1,-1
+                    comp, update, acc, loss, grad = -1,-1,-1,-1,-1
                 else:
-                    comp, update, acc, loss = self.model.train(data, num_epochs, num_data)
+                    comp, update, acc, loss, grad = self.model.train(data, num_epochs, num_data)
             num_train_samples = len(data['y'])
             simulate_time_c = time.time() - start_time
 
@@ -232,13 +258,30 @@ class Client:
             self.act_download_time = 0 # actual
             self.act_train_time = simulate_time_c
             self.act_upload_time = 0
+            
+            # gradiant compress
+            update_size = self.model.size
+            if grad != -1 and self.cfg.compress_algo:
+                if self.cfg.compress_algo == 'sign_sgd':
+                    grad, size_old, size_new = sign_sgd_updater.GradientCompress(grad)
+                    update_size = update_size*size_new/size_old
+                elif self.cfg.compress_algo == 'grad_drop':
+                    grad, size_old, size_new = grad_drop_updater.GradientCompress(grad)
+                    update_size = update_size*size_new/size_old
+                else:
+                    logger.error("compress algorithm is not defined")
 
-            return simulate_time_c, comp, num_train_samples, update, acc, loss
-        
+            return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, update_size
+        '''
+
+        return train_with_simulate_time(self, start_t, num_epochs, batch_size, minibatch)
+
+        '''
         if self.device == None:
             return train_with_real_time_limit(self, num_epochs, batch_size, minibatch)
         else:
             return train_with_simulate_time(self, start_t, num_epochs, batch_size, minibatch)
+        '''
 
     def test(self, set_to_use='test'):
         """Tests self.model on self.test_data.

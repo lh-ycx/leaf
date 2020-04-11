@@ -20,6 +20,9 @@ class ClientModel(Model):
         self.n_hidden = n_hidden
         _, self.indd, vocab = get_word_emb_arr(VOCAB_DIR)
         self.vocab_size = len(vocab)
+
+        self.model_name = os.path.abspath(__file__)
+        
         if emb_arr:
             self.emb_arr = emb_arr
         super(ClientModel, self).__init__(seed, lr)

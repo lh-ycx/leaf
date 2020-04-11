@@ -2,6 +2,7 @@ import tensorflow as tf
 
 from model import Model
 import numpy as np
+import os
 
 
 IMAGE_SIZE = 28
@@ -10,6 +11,7 @@ IMAGE_SIZE = 28
 class ClientModel(Model):
     def __init__(self, seed, lr, num_classes):
         self.num_classes = num_classes
+        self.model_name = os.path.abspath(__file__)
         super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):

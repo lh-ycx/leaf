@@ -35,7 +35,7 @@ class Model(ABC):
         # config.gpu_options.per_process_gpu_memory_fraction = gpu_fraction
         self.sess = tf.Session(graph=self.graph, config=config)
 
-        self.size = graph_size(self.graph)
+        self.size = graph_size(self.graph)  
 
         with self.graph.as_default():
             self.sess.run(tf.global_variables_initializer())
@@ -56,6 +56,33 @@ class Model(ABC):
         with self.graph.as_default():
             model_params = self.sess.run(tf.trainable_variables())
         return model_params
+    
+    def get_gradients(self):
+        logger.error('???')
+        with self.graph.as_default():
+            gradient_paras = tf.gradients(self.loss, tf.trainable_variables()[1:])
+            if 'lstm' in self.model_name:
+                gradients = self.sess.run(gradient_paras,
+                                            feed_dict={
+                                                self.features: self.last_features,
+                                                self.labels: self.last_labels,
+                                                self.sequence_length_ph: self.last_sequence_length_ph,
+                                                self.sequence_mask_ph: self.last_sequence_mask_ph
+                                            })
+            else:
+                gradients = self.sess.run(gradient_paras,
+                                            feed_dict={
+                                                self.features: self.last_features,
+                                                self.labels: self.last_labels
+                                            })
+        return gradients
+    
+    def update_with_gradiant(self, gradients):
+        params = self.get_params()
+        for i in range(len(gradients)):
+            params[i] += gradients[i]*self.lr
+        self.set_params(params)
+        return params
 
     @property
     def optimizer(self):
@@ -98,6 +125,7 @@ class Model(ABC):
         loss = train_reslt['loss']
         logger.info('before: {}'.format(loss))
         '''
+        params_old= self.get_params()
         
         for i in range(num_epochs):
             self.run_epoch(data, batch_size)
@@ -108,7 +136,11 @@ class Model(ABC):
         
         update = self.get_params()
         comp = num_epochs * math.ceil(len(data['y'])/batch_size) * batch_size * self.flops
-        return comp, update, acc, loss
+
+        grad = []
+        for i in range(len(update)):
+            grad.append((update[i]-params_old[i])/self.lr)
+        return comp, update, acc, loss, grad
 
     def run_epoch(self, data, batch_size):
 
@@ -116,6 +148,9 @@ class Model(ABC):
             
             input_data = self.process_x(batched_x)
             target_data = self.process_y(batched_y)
+
+            self.last_features = input_data
+            self.last_labels = target_data
             
             with self.graph.as_default():
                     _, tot_acc, loss = self.sess.run([self.train_op, self.eval_metric_ops, self.loss],
