@@ -5,8 +5,8 @@ import time
 from math import log
 import re
 
-ddls = [210,230,250,270,290,310,330]
-log_dir = '../models/'
+ddls = [210,230,250,270,290,310,330,350]
+log_dir = '../exp_2_remake/femnist_ddl/'
 
 if __name__ == "__main__":
     plt.figure()
@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 if 'test_accuracy' in line:
                     floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                     test_acc = float(floats[0])
-                    if test_acc > 0.82:
+                    if test_acc > 0.83:
                         print(ddl, current_time)
                         x2.append(ddl)
                         y2.append(current_time)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             y.append(fail/(fail+suc))
             if convergence_flag == False:
                 x2.append(ddl)
-                y2.append(1000000)
+                y2.append(10000)
     y = np.array(y)
     print('x:{}'.format(x))
     print('y:{}'.format(y))

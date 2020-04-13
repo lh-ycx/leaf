@@ -55,17 +55,18 @@ class Device():
 
     
     
-    def get_upload_time(self):
+    def get_upload_time(self, model_size):
         if self.model_size == 0.0:
             return 0.0
         upload_speed = np.random.normal(self.upload_speed_u, self.upload_speed_sigma)
         while upload_speed < 0:
             upload_speed = np.random.normal(self.upload_speed_u, self.upload_speed_sigma)
-        upload_time = self.model_size / upload_speed
+        upload_time = model_size / upload_speed / 1000
         return float(upload_time)
 
     def get_download_time(self):
         if self.model_size == 0.0:
+            
             return 0.0
         download_speed = np.random.normal(self.download_speed_u, self.download_speed_sigma)
         while download_speed < 0:

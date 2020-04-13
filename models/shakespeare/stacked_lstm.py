@@ -13,6 +13,9 @@ class ClientModel(Model):
         self.seq_len = seq_len
         self.num_classes = num_classes
         self.n_hidden = n_hidden
+
+        self.model_name = os.path.abspath(__file__)
+        
         super(ClientModel, self).__init__(seed, lr)
 
 

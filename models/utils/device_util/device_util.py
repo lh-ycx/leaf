@@ -154,25 +154,23 @@ class Device_Util:
         reddit_std = [335.5, 20.6, 49.0]
         celeba_mean = [5392, 1355, 561]
         celeba_std = [982.5, 54.6, 20.3]
-        femnist_mean = [1642, 588, 179]
+        femnist_mean = [1642, 588, 179]          
         femnist_std = [99.5, 23.9, 2.3]
         shakespeare_mean = [28621, 13579, 10681]    # batch size = 100
         shakespeare_std = [1720.7, 104.6, 125.6]    # batch size = 100
-        sent140_reg_mean = []
-        sent140_reg_std = []
-        sent140_lstm_mean = []
-        sent140_lstm_std = []
         ii = self.supported_devices.index(model)
         if self.model == 'cnn' and self.dataset == 'celeba':
             train_time_per_batch = np.random.normal(celeba_mean[ii], celeba_std[ii]) / 1000
-        elif self.model == 'topk_stacked_lstm' and  'reddit' in self.dataset:
+        elif 'stacked_lstm' in self.model and  'reddit' in self.dataset:
             train_time_per_batch = np.random.normal(reddit_mean[ii], reddit_std[ii]) / 1000
         elif self.model == 'cnn' and self.dataset == 'femnist':
             train_time_per_batch = np.random.normal(femnist_mean[ii], femnist_std[ii]) / 1000
-        elif self.model == 'stacked_lstm' and self.dataset == 'shakespeare':
+            #print(train_time_per_batch)
+        elif 'stacked_lstm' in self.model and self.dataset == 'shakespeare':
             train_time_per_batch = np.random.normal(shakespeare_mean[ii], shakespeare_std[ii]) / 1000
         else:
             train_time_per_batch = np.random.normal(reddit_mean[ii], reddit_std[ii]) / 1000
+        # print(train_time_per_batch)
         return num_epoch * ((num_sample-1)//batch_size + 1) * train_time_per_batch
 
     def set_model(self, model):

@@ -5,8 +5,8 @@ import time
 from math import log
 import re
 
-ddls = [40,50,60,70,80,90]
-log_dir = '../exp_2/reddit/'
+ddls = [210,230,250,270,290,310,330,350]
+log_dir = '../exp_2_remake/femnist_ddl/'
 
 if __name__ == "__main__":
     plt.figure()
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     x2 = np.array(ddls)
     y2 = []
     for ddl in ddls:
-        with open('{}reddit_ddl_{}.cfg.log'.format(log_dir, ddl), 'r') as f:
+        with open('{}femnist_ddl_5_{}.cfg.log'.format(log_dir, ddl), 'r') as f:
             suc = 0
             fail = 0
             upload_fractions = []

@@ -46,6 +46,7 @@ class Config():
         self.user_trace = False
         self.no_training = False
         self.real_world = False
+        self.compress_algo = None
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -115,6 +116,8 @@ class Config():
                             self.real_world = False
                     elif line[0] == 'max_sample' :
                         self.max_sample = int(line[1])
+                    elif line[0] == 'compress_algo':
+                        self.compress_algo = line[1].strip()
                 except Exception as e:
                     traceback.print_exc()
     

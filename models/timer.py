@@ -358,6 +358,8 @@ class Timer:
             param cur_time: current-time
             param delta: time-passed
         """
+        if self.ubt == None: # no trace mode is always return delta
+            return cur_time + delta
         future = cur_time
         trace_len = int(self.trace_end - self.trace_start)
         future += int(delta / trace_len) * trace_len

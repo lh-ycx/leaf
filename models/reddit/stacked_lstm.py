@@ -24,6 +24,8 @@ class ClientModel(Model):
         self.keep_prob = keep_prob
         self.max_grad_norm = max_grad_norm
 
+        self.model_name = os.path.abspath(__file__)
+
         # initialize vocabulary
         self.vocab, self.vocab_size, self.unk_symbol, self.pad_symbol = self.load_vocab()
         print('vocab_size: {}'.format(self.vocab_size))
@@ -186,6 +188,11 @@ class ClientModel(Model):
                 self.sequence_length_ph: input_lengths,
                 self.sequence_mask_ph: input_mask,
             }
+
+            self.last_features = input_data
+            self.last_labels = target_data
+            self.last_sequence_length_ph = input_lengths
+            self.last_sequence_mask_ph = input_mask
 
             # We need to feed the input data so that the batch size can be inferred.
             if state is None:
