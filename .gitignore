@@ -13,6 +13,7 @@ models/checkpoints/
 models/metrics/*.csv
 models/sent140/embs.json
 models/cached_timers.json
+models/grad_compress/temp/*
 _build/
 _templates/
 autodoc/

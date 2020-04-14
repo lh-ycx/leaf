@@ -47,6 +47,8 @@ class Config():
         self.no_training = False
         self.real_world = False
         self.compress_algo = None
+        self.fedprox = False
+        self.fedprox_mu = 0
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -62,7 +64,7 @@ class Config():
                 if line.startswith('#'):
                     continue
                 try:
-                    line = line.split()
+                    line = line.strip().split()
                     if line[0] == 'num_rounds':
                         self.num_rounds = int(line[1])
                     elif line[0] == 'learning_rate':
@@ -118,6 +120,10 @@ class Config():
                         self.max_sample = int(line[1])
                     elif line[0] == 'compress_algo':
                         self.compress_algo = line[1].strip()
+                    elif line[0] == 'fedprox':
+                        self.fedprox = line[1].strip()=='True'
+                    elif line[0] == 'fedprox_mu':
+                        self.fedprox_mu = float(line[1].strip())
                 except Exception as e:
                     traceback.print_exc()
     

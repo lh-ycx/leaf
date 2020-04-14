@@ -8,6 +8,7 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 
 from model import Model
+from fedprox import PerturbedGradientDescent
 
 VOCABULARY_PATH = '../data/big_reddit/vocab/reddit_vocab.pck'
 
@@ -16,7 +17,7 @@ VOCABULARY_PATH = '../data/big_reddit/vocab/reddit_vocab.pck'
 # and https://r2rt.com/recurrent-neural-networks-in-tensorflow-iii-variable-length-sequences.html
 class ClientModel(Model):
     def __init__(self, seed, lr, seq_len, n_hidden, num_layers,
-        keep_prob=1.0, max_grad_norm=5, init_scale=0.1):
+        keep_prob=1.0, max_grad_norm=5, init_scale=0.1, cfg=None):
 
         self.seq_len = seq_len
         self.n_hidden = n_hidden
@@ -32,7 +33,10 @@ class ClientModel(Model):
 
         self.initializer = tf.random_uniform_initializer(-init_scale, init_scale)
 
-        super(ClientModel, self).__init__(seed, lr)
+        if cfg.fedprox:
+            super(ClientModel, self).__init__(seed, lr, optimizer=PerturbedGradientDescent(lr, cfg.fedprox_mu))
+        else:
+            super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):
 

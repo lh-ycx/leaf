@@ -6,17 +6,21 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 
 from model import Model
+from fedprox import PerturbedGradientDescent
 from utils.language_utils import letter_to_vec, word_to_indices
 
 class ClientModel(Model):
-    def __init__(self, seed, lr, seq_len, num_classes, n_hidden, gpu_fraction=0.2):
+    def __init__(self, seed, lr, seq_len, num_classes, n_hidden, gpu_fraction=0.2, cfg=None):
         self.seq_len = seq_len
         self.num_classes = num_classes
         self.n_hidden = n_hidden
 
         self.model_name = os.path.abspath(__file__)
         
-        super(ClientModel, self).__init__(seed, lr)
+        if cfg.fedprox:
+            super(ClientModel, self).__init__(seed, lr, optimizer=PerturbedGradientDescent(lr, cfg.fedprox_mu))
+        else:
+            super(ClientModel, self).__init__(seed, lr)
 
 
     def create_model(self):

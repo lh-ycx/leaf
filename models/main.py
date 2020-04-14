@@ -82,7 +82,7 @@ def main():
 
     # Create client model, and share params with server model
     tf.reset_default_graph()
-    client_model = ClientModel(cfg.seed, *model_params)
+    client_model = ClientModel(cfg.seed, *model_params, cfg=cfg)
     logger.info('model size: {}'.format(client_model.size))
 
     # Create clients

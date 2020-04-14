@@ -220,7 +220,7 @@ class Client:
                     failed_reason = 'failed when uploading'
                     # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
                     raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-                
+                print("client {} finish train task".format(self.id))
                 return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size
         '''
         # Deprecated
