@@ -11,6 +11,7 @@ from timer import Timer
 
 from grad_compress.grad_drop import GDropUpdate
 from grad_compress.sign_sgd import SignSGDUpdate
+from comm_effi import StructuredUpdate
 
 L = Logger()
 logger = L.get_logger()
@@ -42,6 +43,10 @@ class Client:
                 self.compressor = GDropUpdate(client_id,cfg)
             else:
                 logger.error("compress algorithm is not defined")
+        
+        self.structured_updater = None
+        if self.cfg.structure_k:
+            self.structured_updater = StructuredUpdate(self.cfg.structure_k, self.cfg.seed)
         
         self.device = device  # if device == none, it will use real time as train time, and set upload/download time as 0
         if self.device == None:
@@ -201,6 +206,7 @@ class Client:
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
 
+                # gradiant compress and Federated Learning Strategies are mutually-exclusive
                 # gradiant compress
                 if self.compressor != None and not self.cfg.no_training:
                     grad, size_old, size_new = self.compressor.GradientCompress(grad)
@@ -211,7 +217,18 @@ class Client:
                     up_end_time = self.timer.get_future_time(train_end_time, upload_time)
                     self.act_upload_time = up_end_time-train_end_time
 
+                # Federated Learning Strategies for Improving Communication Efficiency
+                seed = None
+                shape_old = None
+                if self.structured_updater and not self.cfg.no_training:
+                    seed, shape_old, grad = self.structured_updater.struc_update(grad)
 
+                    self.update_size *= sum([np.prod(g.shape) for g in grad]) / sum([np.prod(s) for s in shape_old])
+                    # re-calculate upload_time
+                    upload_time = self.device.get_upload_time(self.update_size)
+                    self.ori_upload_time = upload_time
+                    up_end_time = self.timer.get_future_time(train_end_time, upload_time)
+                    self.act_upload_time = up_end_time-train_end_time
                 
                 total_cost = self.act_download_time + self.act_train_time + self.act_upload_time
                 if total_cost > self.deadline:
@@ -220,8 +237,8 @@ class Client:
                     failed_reason = 'failed when uploading'
                     # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
                     raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-                print("client {} finish train task".format(self.id))
-                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size
+                # print("client {} finish train task".format(self.id))
+                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old 
         '''
         # Deprecated
         @timeout_decorator.timeout(train_time_limit)

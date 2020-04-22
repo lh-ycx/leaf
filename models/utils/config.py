@@ -49,6 +49,8 @@ class Config():
         self.compress_algo = None
         self.fedprox = False
         self.fedprox_mu = 0
+        # grad_compress and structure_k are mutually-exclusive
+        self.structure_k = None 
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -124,6 +126,8 @@ class Config():
                         self.fedprox = line[1].strip()=='True'
                     elif line[0] == 'fedprox_mu':
                         self.fedprox_mu = float(line[1].strip())
+                    elif line[0] == 'structure_k':
+                        self.structure_k = int(line[1].strip())
                 except Exception as e:
                     traceback.print_exc()
     

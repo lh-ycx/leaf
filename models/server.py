@@ -7,6 +7,7 @@ import json
 
 from grad_compress.grad_drop import GDropUpdate
 from grad_compress.sign_sgd import SignSGDUpdate,MajorityVote
+from comm_effi import StructuredUpdate
 
 from baseline_constants import BYTES_WRITTEN_KEY, BYTES_READ_KEY, LOCAL_COMPUTATIONS_KEY
 
@@ -25,6 +26,7 @@ class Server:
         self.updates = []
         self.gradiants = []
         self.clients_info = defaultdict(dict)
+        self.structure_updater = None
         for c in self.all_clients:
             self.clients_info[str(c.id)]["comp"] = 0
             self.clients_info[str(c.id)]["acc"] = 0.0
@@ -101,7 +103,7 @@ class Server:
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
                 start_t = self.get_cur_time()
-                simulate_time_c, comp, num_samples, update, acc, loss, gradiant, update_size = c.train(start_t, num_epochs, batch_size, minibatch)       
+                simulate_time_c, comp, num_samples, update, acc, loss, gradiant, update_size, seed, shape_old = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 logger.debug('client {} num_samples: {}'.format(c.id, num_samples))
                 logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
@@ -115,6 +117,13 @@ class Server:
                 sys_metrics[c.id]['loss'] = loss
                 # uploading 
                 self.updates.append((c.id, num_samples, update))
+
+                if self.cfg.structure_k:
+                    if not self.structure_updater:
+                        self.structure_updater = StructuredUpdate(self.cfg.structure_k, seed)
+                    gradiant = self.structure_updater.regain_grad(shape_old, gradiant)
+                    print("client {} finish using structure_update with k = {}".format(c.id, self.cfg.structure_k))
+                    
                 self.gradiants.append((c.id, num_samples, gradiant))
                 
                 norm_comp = int(comp/self.client_model.flops)
