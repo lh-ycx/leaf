@@ -193,7 +193,13 @@ class Client:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
                         update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                        if self.cfg.fedprox:
+                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
+                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            else:
+                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                        else:
+                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
@@ -201,7 +207,13 @@ class Client:
                         comp = self.model.get_comp(data, num_epochs, num_data)
                         update, acc, loss, grad = -1,-1,-1,-1
                     else:
-                        comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                        if self.cfg.fedprox: 
+                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
+                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            else:
+                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                        else:
+                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
@@ -237,7 +249,8 @@ class Client:
                     failed_reason = 'failed when uploading'
                     # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
                     raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-                # print("client {} finish train task".format(self.id))
+                # if self.cfg.fedprox:
+                #     print("client {} finish train task".format(self.id))
                 return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old 
         '''
         # Deprecated
