@@ -109,10 +109,10 @@ class Config():
                         self.no_training = line[1].strip() == 'True'
                         if self.no_training:
                             logger.info('no actual training process')
-                    elif line[0] == 'real_world':
-                        self.real_world == line[1].strip() == 'True'
+                    elif line[0] == 'realworld':
+                        self.real_world = line[1].strip() == 'True'
                         if self.real_world and 'realworld' not in self.dataset:
-                            logger.error('\'real_world\' is valid only when dataset is set to \'realworld\'')
+                            logger.error('\'real_world\' is valid only when dataset is set to \'realworld\', current dataset {}'.format(self.dataset))
                             self.real_world = False
                     elif line[0] == 'max_sample' :
                         self.max_sample = int(line[1])

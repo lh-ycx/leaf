@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 if 'test_accuracy' in line:
                     floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                     test_acc = float(floats[0])
-                    if test_acc > 0.83:
+                    if test_acc > 0.81:
                         print(ddl, current_time)
                         x2.append(ddl)
                         y2.append(current_time)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             y.append(fail/(fail+suc))
             if convergence_flag == False:
                 x2.append(ddl)
-                y2.append(10000)
+                y2.append(200000)
     y = np.array(y)
     print('x:{}'.format(x))
     print('y:{}'.format(y))

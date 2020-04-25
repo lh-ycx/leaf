@@ -8,7 +8,6 @@ from collections import defaultdict
 import re
 import csv
 
-ddls = [250, 310]
 delta = 5
 log_dir = '../exp_2_remake/femnist_ddl/'
 failure_reasons = ['network', 'training', 'interrupt']
@@ -21,15 +20,16 @@ std_d_t = 0
 std_t_t = 0
 
 
-def check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t):
+def check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t,ddl,avg_d_t,avg_u_t):
     if (ori_d_t+ori_t_t+ori_u_t) <= ddl and (act_d_t+act_t_t+act_u_t) > ddl:
         return 'interrupt'
-    if (ori_d_t+ori_u_t) > 2*(avg_d_t+avg_u_t):
+    if (ori_d_t+ori_u_t) > 3*(avg_d_t+avg_u_t):
         return 'network'
     else:
         return 'training'
 
-if __name__ == "__main__":
+
+def main(E):
     f = open('{}femnist_ddl_5_310_sys.csv'.format(log_dir), 'r')
     data = csv.DictReader(f)
     d_ts, u_ts, t_ts = [], [], []
@@ -54,12 +54,16 @@ if __name__ == "__main__":
     print('train time std:', std_t_t)
     
     plt.figure()
+    if E == 5:
+        ddls = [230, 250, 270, 290, 310, 330]
+    elif E == 1:
+        ddls = [40,50,60,70,80,90,100]
     for ddl in ddls:
         f.close()
-        f = open('{}femnist_ddl_5_{}_sys.csv'.format(log_dir,ddl), 'r')
+        f = open('{}femnist_ddl_{}_{}_sys.csv'.format(log_dir,E, ddl), 'r')
         data = csv.DictReader(f)
-        x = []
-        x_time = []
+        # x = []
+        # x_time = []
         y = defaultdict(list)
         cur_time = 0
         cur_round = 0
@@ -68,9 +72,9 @@ if __name__ == "__main__":
         for row in data:
             r = int(row['round_number'])
             if r > cur_round + delta:
-                x.append(cur_round)
+                # x.append(cur_round)
                 cur_time += round_time*delta
-                x_time.append(cur_time/3600)
+                # x_time.append(cur_time/3600)
                 for reason in failure_reasons:
                     y[reason].append(failure_cnt[reason]/delta)
                 cur_round = r
@@ -87,7 +91,7 @@ if __name__ == "__main__":
             round_time = min(ddl, max(round_time, act_d_t+act_t_t+act_u_t))
             round_time += 20
             if (act_d_t+act_t_t+act_u_t) > ddl:
-                reason = check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t)
+                reason = check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t,ddl,avg_d_t,avg_u_t)
                 failure_cnt[reason] += 1
         
         '''
@@ -111,28 +115,32 @@ if __name__ == "__main__":
 
 
         
+        if E == 5:
+            width = 5
+        elif E == 1:
+            width = 2.5
         for cnt in range(len(failure_reasons)):
-            if ddl == 250:
-                plt.plot(x_time,y[failure_reasons[cnt]], c=colors[cnt],ls='--')
-            else:
-                plt.plot(x_time,y[failure_reasons[cnt]], c=colors[cnt])
+            plt.bar((ddl-(1-cnt)*width), height=np.mean(y[failure_reasons[cnt]]), width=width, color=colors[cnt], label=failure_reasons[cnt])
     font = {
             'weight' : 'normal',
-            'size'   : 15,
+            'size'   : 20,
             }
-    plt.grid(axis='x',color='grey',ls='--')
-    x_major_locator=MultipleLocator(12)
-    ax=plt.gca()
+    # plt.grid(axis='x',color='grey',ls='--')
+    # x_major_locator=MultipleLocator(20)
+    # ax=plt.gca()
     # ax为两条坐标轴的实例
-    ax.xaxis.set_major_locator(x_major_locator)
-    plt.xlabel('timeline/h',font)
+    # ax.xaxis.set_major_locator(x_major_locator)
+    plt.xlabel('ddl/s',font)
+    plt.xticks(ddls)
     plt.ylabel('failure num',font)
-    texts = []
-    for ddl in ddls:
-        texts += [reason+'_{}'.format(ddl) for reason in failure_reasons]
-    plt.legend(texts)
-    plt.savefig('failure_analysis_by_time.png')
+    plt.title('Femnist (E = {})'.format(E), fontsize=25)
+    # texts = []
+    # for ddl in ddls:
+    #     texts += [reason+'_{}'.format(ddl) for reason in failure_reasons]
+    plt.legend([_ for _ in failure_reasons])
+    plt.savefig('failure_analysis_{}.png'.format(E))
     
 
-
-    
+if __name__ == "__main__":
+    main(1)
+    main(5)

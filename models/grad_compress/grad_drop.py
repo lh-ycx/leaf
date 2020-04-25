@@ -42,8 +42,6 @@ class GDropUpdate(Compressor):
 
         with open(self.delta_gradient_list_file, 'w') as f:
             data = [_.tolist() for _ in  delta_gradient_list]
-            # print(delta_gradient_list)
-            # print(data)
             json.dump(data, f)
         return compressed_gradient_list, element_num * 32,  compressed_element_num*32
 

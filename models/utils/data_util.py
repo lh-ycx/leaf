@@ -23,5 +23,5 @@ def read_dir(data_dir):
 
 if __name__ == "__main__":
     num_sample = read_dir(input_dir)
-    print(np.percentile(num_sample, 80))
+    print(np.percentile(num_sample,90))
 

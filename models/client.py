@@ -182,6 +182,10 @@ class Client:
                 self.update_size = 0
                 failed_reason = 'failed when training'
                 raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif (up_end_time-start_t) > self.deadline and self.cfg.no_training:
+                self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
+                failed_reason = 'failed when uploading'
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     if self.cfg.no_training:
