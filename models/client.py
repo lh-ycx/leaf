@@ -191,29 +191,29 @@ class Client:
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
-                        update, acc, loss, grad = -1,-1,-1,-1
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
                         if self.cfg.fedprox:
                             if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                             else:
-                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
                         else:
-                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, num_data)
-                        update, acc, loss, grad = -1,-1,-1,-1
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
                         if self.cfg.fedprox: 
                             if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                             else:
-                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
                         else:
-                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
@@ -251,7 +251,7 @@ class Client:
                     raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
                 # if self.cfg.fedprox:
                 #     print("client {} finish train task".format(self.id))
-                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old 
+                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old, loss_old
         '''
         # Deprecated
         @timeout_decorator.timeout(train_time_limit)

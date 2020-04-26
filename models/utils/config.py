@@ -46,11 +46,13 @@ class Config():
         self.user_trace = False
         self.no_training = False
         self.real_world = False
+        # grad_compress,  structure_k, fedprox and qffl are mutually-exclusive
         self.compress_algo = None
         self.fedprox = False
         self.fedprox_mu = 0
-        # grad_compress and structure_k are mutually-exclusive
         self.structure_k = None 
+        self.qffl = False
+        self.qffl_q = 0
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -130,6 +132,10 @@ class Config():
                         self.fedprox_active_frac = float(line[1].strip())
                     elif line[0] == 'structure_k':
                         self.structure_k = int(line[1].strip())
+                    elif line[0] == 'qffl':
+                        self.qffl = line[1].strip()=='True'
+                    elif line[0] == 'qffl_q':
+                        self.qffl_q = float(line[1].strip())
                 except Exception as e:
                     traceback.print_exc()
     
