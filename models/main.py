@@ -146,7 +146,7 @@ def main():
         while deadline <= 0:
             deadline = np.random.normal(cfg.round_ddl[0], cfg.round_ddl[1])
         deadline = int(deadline)
-        if cfg.user_trace:
+        if cfg.behav_hete:
             logger.info('selected deadline: {}'.format(deadline))
         
         # 1.3 update simulation time

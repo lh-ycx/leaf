@@ -43,7 +43,8 @@ class Config():
         '''
         self.aggregate_algorithm = 'FedAvg'
         self.time_window = [20.0, 0.0]  # time window for selection stage
-        self.user_trace = False
+        self.behav_hete = False
+        self.hard_hete = False
         self.no_training = False
         self.real_world = False
         # grad_compress,  structure_k, fedprox and qffl are mutually-exclusive
@@ -107,10 +108,14 @@ class Config():
                         self.aggregate_algorithm = str(line[1])
                     elif line[0] == 'time_window':
                         self.time_window = [float(line[1]), float(line[2])]
-                    elif line[0] == 'user_trace' :
-                        self.user_trace = line[1].strip() == 'True'
-                        if not self.user_trace:
-                            logger.info('no user trace will be used! assume client is availiable at any time.')
+                    elif line[0] == 'behav_hete' :
+                        self.behav_hete = line[1].strip() == 'True'
+                        if not self.behav_hete:
+                            logger.info('no behavior heterogeneity! assume client is availiable at any time.')
+                    elif line[0] == 'hard_hete' :
+                        self.hard_hete = line[1].strip() == 'True'
+                        if not self.hard_hete:
+                            logger.info('no hardware heterogeneity! assume all clients are same.')
                     elif line[0] == 'no_training' :
                         self.no_training = line[1].strip() == 'True'
                         if self.no_training:

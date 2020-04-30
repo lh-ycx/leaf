@@ -56,24 +56,32 @@ class Client:
         # timer
         d = Client.d
         if d == None:
-            cfg.user_trace = False
+            cfg.behav_hete = False
         # uid = random.randint(0, len(d))
-        if cfg.user_trace and cfg.real_world == False:
-            uid = random.sample(list(d.keys()), 1)[0]
-            self.timer = Timer(ubt=d[str(uid)], google=True)
-            while self.timer.isSuccess != True:
+        if cfg.behav_hete:
+            if cfg.real_world == False:
                 uid = random.sample(list(d.keys()), 1)[0]
                 self.timer = Timer(ubt=d[str(uid)], google=True)
-        elif cfg.user_trace and cfg.real_world == True:
-            uid = self.id
-            self.timer = Timer(ubt=d[str(uid)], google=True)
+                while self.timer.isSuccess != True:
+                    uid = random.sample(list(d.keys()), 1)[0]
+                    self.timer = Timer(ubt=d[str(uid)], google=True)
+            else:
+                uid = self.id
+                self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
+            # no behavior heterogeneity, always available
             self.timer = Timer(None)
             self.deadline = sys.maxsize # deadline is meaningless without user trace
         
         real_device_model = self.timer.model
-        if self.device is not None:
+        
+        if not self.device: 
+            self.device = Device(cfg, 0.0)
+
+        if self.cfg.hard_hete:
             self.device.set_device_model(real_device_model)
+        else:
+            self.device.set_device_model("Redmi Note8")
 
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
@@ -380,7 +388,7 @@ class Client:
     
     
     def set_deadline(self, deadline = -1):
-        if deadline < 0 or not self.cfg.user_trace:
+        if deadline < 0 or not self.cfg.behav_hete:
             self.deadline = sys.maxsize
         else:
             self.deadline = deadline
