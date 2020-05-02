@@ -193,25 +193,49 @@ class Client:
                 comp = self.model.get_comp(data, num_epochs, batch_size)
                 self.actual_comp = int(comp*available_time/train_time)    # will be used in get_actual_comp
                 self.update_size = 0
-                failed_reason = 'failed when training'
-                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-            elif (up_end_time-start_t) > self.deadline and self.cfg.no_training:
+                if self.cfg.fedprox:
+                    ne = -1
+                    for i in range(1, num_epochs):
+                        et = self.timer.get_future_time(down_end_time, train_time*ne/num_epochs + upload_time)
+                        if et - start_t <= self.deadline:
+                            ne = i
+                    if self.cfg.no_training:
+                        comp = self.model.get_comp(data, num_epochs, batch_size)
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
+                    elif self.cfg.fedprox and ne != -1:
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                    else:
+                        failed_reason = 'failed when training'
+                        raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                else:
+                    failed_reason = 'failed when training'
+                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif (up_end_time-start_t) > self.deadline:
                 self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
-                failed_reason = 'failed when uploading'
-                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                if self.cfg.fedprox:
+                    ne = -1
+                    for i in range(1, num_epochs):
+                        et = self.timer.get_future_time(down_end_time, train_time*ne/num_epochs + upload_time)
+                        if et - start_t <= self.deadline:
+                            ne = i
+                    if self.cfg.no_training:
+                        comp = self.model.get_comp(data, num_epochs, batch_size)
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
+                    elif self.cfg.fedprox and ne != -1:
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                    else:
+                        failed_reason = 'failed when training'
+                        raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                else:
+                    failed_reason = 'failed when uploading'
+                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
-                        if self.cfg.fedprox:
-                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
-                            else:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
-                        else:
-                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
@@ -219,13 +243,7 @@ class Client:
                         comp = self.model.get_comp(data, num_epochs, num_data)
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
-                        if self.cfg.fedprox: 
-                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
-                            else:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
-                        else:
-                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
