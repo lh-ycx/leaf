@@ -126,6 +126,7 @@ class Model(ABC):
         logger.info('before: {}'.format(loss))
         '''
         params_old= self.get_params()
+        loss_old = self.test(data)['loss']
         
         for i in range(num_epochs):
             self.run_epoch(data, batch_size)
@@ -140,7 +141,7 @@ class Model(ABC):
         grad = []
         for i in range(len(update)):
             grad.append((update[i]-params_old[i])/self.lr)
-        return comp, update, acc, loss, grad
+        return comp, update, acc, loss, grad, loss_old
 
     def run_epoch(self, data, batch_size):
 

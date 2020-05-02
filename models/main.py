@@ -146,7 +146,7 @@ def main():
         while deadline <= 0:
             deadline = np.random.normal(cfg.round_ddl[0], cfg.round_ddl[1])
         deadline = int(deadline)
-        if cfg.user_trace:
+        if cfg.behav_hete:
             logger.info('selected deadline: {}'.format(deadline))
         
         # 1.3 update simulation time
@@ -177,6 +177,9 @@ def main():
         if cfg.compress_algo:
             logger.info('update using compressed grads')
             server.update_using_compressed_grad(cfg.update_frac)
+        elif cfg.qffl:
+            server.update_using_qffl(cfg.update_frac)
+            logger.info('round success by using qffl')
         else:
             server.update_model(cfg.update_frac)
         

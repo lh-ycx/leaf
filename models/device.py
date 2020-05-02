@@ -27,9 +27,10 @@ class Device():
     # support device type
     def __init__(self, cfg, model_size = 0):
         self.device_model = None    # later set according to the trace
+        self.cfg = cfg
         
         self.model_size = model_size / 1024 # change to kb because speed data use 'kb/s'
-        if cfg.user_trace == False:
+        if cfg.behav_hete == False:
             # make sure the no_trace mode perform the same as original leaf
             self.model_size = 0
         if Device.speed_distri == None:
@@ -56,8 +57,9 @@ class Device():
     
     
     def get_upload_time(self, model_size):
-        if self.model_size == 0.0:
+        if self.model_size == 0.0 or not self.cfg.hard_hete:
             return 0.0
+
         upload_speed = np.random.normal(self.upload_speed_u, self.upload_speed_sigma)
         while upload_speed < 0:
             upload_speed = np.random.normal(self.upload_speed_u, self.upload_speed_sigma)
@@ -65,9 +67,9 @@ class Device():
         return float(upload_time)
 
     def get_download_time(self):
-        if self.model_size == 0.0:
-            
+        if self.model_size == 0.0 or not self.cfg.hard_hete:            
             return 0.0
+        
         download_speed = np.random.normal(self.download_speed_u, self.download_speed_sigma)
         while download_speed < 0:
             download_speed = np.random.normal(self.download_speed_u, self.download_speed_sigma)

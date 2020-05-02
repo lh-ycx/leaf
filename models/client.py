@@ -56,24 +56,32 @@ class Client:
         # timer
         d = Client.d
         if d == None:
-            cfg.user_trace = False
+            cfg.behav_hete = False
         # uid = random.randint(0, len(d))
-        if cfg.user_trace and cfg.real_world == False:
-            uid = random.sample(list(d.keys()), 1)[0]
-            self.timer = Timer(ubt=d[str(uid)], google=True)
-            while self.timer.isSuccess != True:
+        if cfg.behav_hete:
+            if cfg.real_world == False:
                 uid = random.sample(list(d.keys()), 1)[0]
                 self.timer = Timer(ubt=d[str(uid)], google=True)
-        elif cfg.user_trace and cfg.real_world == True:
-            uid = self.id
-            self.timer = Timer(ubt=d[str(uid)], google=True)
+                while self.timer.isSuccess != True:
+                    uid = random.sample(list(d.keys()), 1)[0]
+                    self.timer = Timer(ubt=d[str(uid)], google=True)
+            else:
+                uid = self.id
+                self.timer = Timer(ubt=d[str(uid)], google=True)
         else:
+            # no behavior heterogeneity, always available
             self.timer = Timer(None)
             self.deadline = sys.maxsize # deadline is meaningless without user trace
         
         real_device_model = self.timer.model
-        if self.device is not None:
+        
+        if not self.device: 
+            self.device = Device(cfg, 0.0)
+
+        if self.cfg.hard_hete:
             self.device.set_device_model(real_device_model)
+        else:
+            self.device.set_device_model("Redmi Note8")
 
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
@@ -195,29 +203,29 @@ class Client:
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
-                        update, acc, loss, grad = -1,-1,-1,-1
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
                         if self.cfg.fedprox:
                             if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                             else:
-                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
                         else:
-                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, num_data)
-                        update, acc, loss, grad = -1,-1,-1,-1
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
                         if self.cfg.fedprox: 
                             if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                             else:
-                                comp, update, acc, loss, grad = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
+                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
                         else:
-                            comp, update, acc, loss, grad = self.model.train(data, num_epochs, batch_size)
+                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 num_train_samples = len(data['y'])
                 simulate_time_c = train_time + upload_time
                 self.actual_comp = comp
@@ -256,7 +264,7 @@ class Client:
                     raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
                 # if self.cfg.fedprox:
                 #     print("client {} finish train task".format(self.id))
-                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old 
+                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old, loss_old
         '''
         # Deprecated
         @timeout_decorator.timeout(train_time_limit)
@@ -385,7 +393,7 @@ class Client:
     
     
     def set_deadline(self, deadline = -1):
-        if deadline < 0 or not self.cfg.user_trace:
+        if deadline < 0 or not self.cfg.behav_hete:
             self.deadline = sys.maxsize
         else:
             self.deadline = deadline

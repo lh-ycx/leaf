@@ -2,6 +2,7 @@ import numpy as np
 import timeout_decorator
 import traceback
 from utils.logger import Logger
+from utils.tf_utils import norm_grad
 from collections import defaultdict
 import json
 
@@ -25,6 +26,8 @@ class Server:
         self.all_clients = clients
         self.updates = []
         self.gradiants = []
+        self.deltas = []
+        self.hs = []
         self.clients_info = defaultdict(dict)
         self.structure_updater = None
         for c in self.all_clients:
@@ -95,6 +98,10 @@ class Server:
         simulate_time = 0
         accs = []
         losses = []
+        self.updates = []
+        self.gradiants = []
+        self.deltas = []
+        self.hs = []
         for c in clients:
             c.model.set_params(self.model)
             try:
@@ -103,7 +110,7 @@ class Server:
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
                 start_t = self.get_cur_time()
-                simulate_time_c, comp, num_samples, update, acc, loss, gradiant, update_size, seed, shape_old = c.train(start_t, num_epochs, batch_size, minibatch)       
+                simulate_time_c, comp, num_samples, update, acc, loss, gradiant, update_size, seed, shape_old, loss_old = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 logger.debug('client {} num_samples: {}'.format(c.id, num_samples))
                 logger.debug('client {} acc: {}, loss: {}'.format(c.id, acc, loss))
@@ -125,6 +132,12 @@ class Server:
                     print("client {} finish using structure_update with k = {}".format(c.id, self.cfg.structure_k))
                     
                 self.gradiants.append((c.id, num_samples, gradiant))
+
+                if self.cfg.qffl:
+                    q = self.cfg.qffl_q
+                    self.deltas.append([np.float_power(loss_old + 1e-10, q) * grad for grad in gradiant])
+                    self.hs.append(q * np.float_power(loss_old + 1e-10, (q - 1)) * norm_grad(gradiant) + (1.0 / self.client_model.lr) * np.float_power(loss_old + 1e-10, q))
+                    print("client {} finish using qffl with q = {}".format(c.id, self.cfg.qffl_q))
                 
                 norm_comp = int(comp/self.client_model.flops)
                 if norm_comp == 0:
@@ -187,6 +200,8 @@ class Server:
                 logger.info('pseduo-update because of no_training setting.')
                 self.updates = []
                 self.gradiants = []
+                self.deltas = []
+                self.hs = []
                 return
             if self.cfg.aggregate_algorithm == 'FedAvg':
                 # aggregate all the clients
@@ -207,6 +222,7 @@ class Server:
                             base[i] += (c.num_train_samples * v.astype(np.float64))
                 averaged_soln = [v / total_weight for v in base]
                 self.model = averaged_soln
+            
             elif self.cfg.aggregate_algorithm == 'SucFedAvg':
                 # aggregate the successfully uploaded clients
                 logger.info('Aggragate with SucFedAvg')
@@ -219,6 +235,7 @@ class Server:
                         base[i] += (client_samples * v.astype(np.float64))
                 averaged_soln = [v / total_weight for v in base]
                 self.model = averaged_soln
+            
             elif self.cfg.aggregate_algorithm == 'SelFedAvg':
                 # aggregate the selected clients
                 logger.info('Aggragate with SelFedAvg')
@@ -238,6 +255,7 @@ class Server:
                             base[i] += (c.num_train_samples * v.astype(np.float64))
                 averaged_soln = [v / total_weight for v in base]
                 self.model = averaged_soln
+            
             else:
                 # not supported aggregating algorithm
                 logger.error('not supported aggregating algorithm: {}'.format(self.cfg.aggregate_algorithm))
@@ -248,6 +266,8 @@ class Server:
         
         self.updates = []
         self.gradiants = []
+        self.deltas = []
+        self.hs = []
 
     def update_using_compressed_grad(self, update_frac):
         logger.info('{} of {} clients upload successfully'.format(len(self.updates), len(self.selected_clients)))
@@ -257,6 +277,8 @@ class Server:
                 logger.info('pseduo-update because of no_training setting.')
                 self.updates = []
                 self.gradiants = []
+                self.deltas = []
+                self.hs = []
                 return
             if self.cfg.aggregate_algorithm == 'FedAvg':
                 # aggregate all the clients
@@ -293,7 +315,7 @@ class Server:
                 if self.cfg.compress_algo == 'sign_sgd':
                     averaged_grad = MajorityVote(averaged_grad)
                 self.model = self.client_model.update_with_gradiant(averaged_grad)
-
+            
             elif self.cfg.aggregate_algorithm == 'SelFedAvg':
                 # aggregate the selected clients
                 logger.info('Aggragate with SelFedAvg after grad compress')
@@ -313,7 +335,7 @@ class Server:
                 if self.cfg.compress_algo == 'sign_sgd':
                     averaged_grad = MajorityVote(averaged_grad)
                 self.model = self.client_model.update_with_gradiant(averaged_grad)
-                
+            
             else:
                 # not supported aggregating algorithm
                 logger.error('not supported aggregating algorithm: {}'.format(self.cfg.aggregate_algorithm))
@@ -324,6 +346,46 @@ class Server:
         
         self.updates = []
         self.gradiants = []
+        self.deltas = []
+        self.hs = []
+
+    def update_using_qffl(self, update_frac):
+        logger.info('{} of {} clients upload successfully'.format(len(self.updates), len(self.selected_clients)))
+        if len(self.gradiants) / len(self.selected_clients) >= update_frac:        
+            logger.info('round succeed, updating global model...')
+            if self.cfg.no_training:
+                logger.info('pseduo-update because of no_training setting.')
+                self.updates = []
+                self.gradiants = []
+                self.deltas = []
+                self.hs = []
+                return
+            
+            # aggregate using q-ffl
+            demominator = np.sum(np.asarray(self.hs))
+            num_clients = len(self.deltas)
+            scaled_deltas = []
+            for client_delta in self.deltas:
+                scaled_deltas.append([layer * 1.0 / demominator for layer in client_delta])
+
+            updates = []
+            for i in range(len(self.deltas[0])):
+                tmp = scaled_deltas[0][i]
+                for j in range(1, len(self.deltas)):
+                    tmp += scaled_deltas[j][i]
+                updates.append(tmp)
+
+            self.model = [(u - v) * 1.0 for u, v in zip(self.model, updates)]
+
+            self.updates = []
+            self.gradiants = []
+            self.deltas = []
+            self.hs = []
+
+        else:
+            logger.info('round failed, global model maintained.')
+        
+
     
     def test_model(self, clients_to_test, set_to_use='test'):
         """Tests self.model on given clients.
