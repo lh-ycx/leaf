@@ -16,12 +16,14 @@ if __name__ == "__main__":
     for nation in nations:
         plt.figure()
         cnt = 0
+        acc = []
         for prefix in prefixs:
             with open('{}/realword_{}_{}.cfg.log'.format(log_dir,nation,prefix), 'r') as f:
                 x = []
                 y = []
                 
                 current_round = 0
+                final_acc = 0
                 hour = 0
                 suc = 0
 
@@ -31,17 +33,17 @@ if __name__ == "__main__":
                     if 'test_accuracy' in line:
                         floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                         test_acc = float(floats[3])
-                        if test_acc > 1:
-                            print(floats)
-                            assert False
+                        final_acc = test_acc
                         x.append(current_round)
                         y.append(test_acc)
+            acc.append(final_acc)
             x = np.array(x)
             y = np.array(y)
             plt.plot(x,y,color=colors[cnt],linewidth=2)
             cnt+=1
-
-
+        
+        print('{} acc: {}'.format(nation,acc))
+        print(acc[0]/acc[2], acc[1]/acc[2])
         font = {
                 'weight' : 'normal',
                 'size'   : 23,

@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from model import Model
+from fedprox import PerturbedGradientDescent
 import numpy as np
 import os
 
@@ -9,10 +10,13 @@ IMAGE_SIZE = 28
 
 
 class ClientModel(Model):
-    def __init__(self, seed, lr, num_classes):
+    def __init__(self, seed, lr, num_classes, cfg=None):
         self.num_classes = num_classes
         self.model_name = os.path.abspath(__file__)
-        super(ClientModel, self).__init__(seed, lr)
+        if cfg.fedprox:
+            super(ClientModel, self).__init__(seed, lr, optimizer=PerturbedGradientDescent(lr, cfg.fedprox_mu))
+        else:
+            super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):
         """Model function for CNN."""

@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 
 from model import Model
+from fedprox import PerturbedGradientDescent
 from utils.language_utils import line_to_indices, get_word_emb_arr, val_to_vec
 
 
@@ -14,7 +15,7 @@ VOCAB_DIR = 'sent140/embs.json'
 
 class ClientModel(Model):
 
-    def __init__(self, seed, lr, seq_len, num_classes, n_hidden, emb_arr=None):
+    def __init__(self, seed, lr, seq_len, num_classes, n_hidden, emb_arr=None, cfg=None):
         self.seq_len = seq_len
         self.num_classes = num_classes
         self.n_hidden = n_hidden
@@ -26,7 +27,10 @@ class ClientModel(Model):
         
         if emb_arr:
             self.emb_arr = emb_arr
-        super(ClientModel, self).__init__(seed, lr)
+        if cfg.fedprox:
+            super(ClientModel, self).__init__(seed, lr, optimizer=PerturbedGradientDescent(lr, cfg.fedprox_mu))
+        else:
+            super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):
         features = tf.placeholder(tf.int32, [None, self.seq_len])

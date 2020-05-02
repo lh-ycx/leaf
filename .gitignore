@@ -13,6 +13,9 @@ models/checkpoints/
 models/metrics/*.csv
 models/sent140/embs.json
 models/cached_timers.json
+models/grad_compress/temp/*
+models/attended_clients_default.cfg.json
+models/clients_info_default.cfg.json
 _build/
 _templates/
 autodoc/

@@ -11,8 +11,8 @@ log_dir = '../exp_2/interrupt/'
 if __name__ == "__main__":
     plt.figure()
     fig,ax1 = plt.subplots()
-    ax1.set_xlabel('ddl/s')
-    ax1.set_ylabel('Average Interruption Rate')
+    ax1.set_xlabel('ddl/s',fontsize=18)
+    ax1.set_ylabel('Average Interruption Rate',fontsize=18)
     # ax2 = ax1.twinx()
     # ax2.set_ylabel('Convergence Time/s')
     # x = np.array(list(map(log, ddls)))
@@ -38,11 +38,11 @@ if __name__ == "__main__":
     print('x:{}'.format(x))
     print('y:{}'.format(y))
     l_1 = ax1.plot(x,y,'o-',color='blue',label='Average Interruption Rate')
-    l_2 = ax1.axvline(x=2375.78,ls=":",c="red", label='Average Available Interval Length') #添加垂直直线
+    l_2 = ax1.axvline(x=2375.78,ls=":",c="red", label='Average Available Interval Length')
     # l_2 = ax2.plot(x2,y2,'X-',color='red', label='Convergence Time')
     # ax2.axis([None,None,y_min*0.99,y_max*1.01])
     # print(l_2.get_label())
     l_1.append(l_2)
     labels = [l.get_label() for l in l_1]
-    ax1.legend(l_1, labels)
+    ax1.legend(l_1, labels, fontsize=16)
     plt.savefig('ddl2interrupt.png')

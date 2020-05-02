@@ -47,6 +47,10 @@ class Config():
         self.no_training = False
         self.real_world = False
         self.compress_algo = None
+        self.fedprox = False
+        self.fedprox_mu = 0
+        # grad_compress and structure_k are mutually-exclusive
+        self.structure_k = None 
         
         logger.info('read config from {}'.format(config_file))
         self.read_config(config_file)
@@ -62,7 +66,7 @@ class Config():
                 if line.startswith('#'):
                     continue
                 try:
-                    line = line.split()
+                    line = line.strip().split()
                     if line[0] == 'num_rounds':
                         self.num_rounds = int(line[1])
                     elif line[0] == 'learning_rate':
@@ -111,15 +115,23 @@ class Config():
                             logger.info('no actual training process')
                     elif line[0] == 'realworld':
                         self.real_world = line[1].strip() == 'True'
-                        if self.real_world and 'realworld' not in self.dataset:
-                            logger.error('\'real_world\' is valid only when dataset is set to \'realworld\', current dataset {}'.format(self.dataset))
-                            self.real_world = False
                     elif line[0] == 'max_sample' :
                         self.max_sample = int(line[1])
                     elif line[0] == 'compress_algo':
                         self.compress_algo = line[1].strip()
+                    elif line[0] == 'fedprox':
+                        self.fedprox = line[1].strip()=='True'
+                    elif line[0] == 'fedprox_mu':
+                        self.fedprox_mu = float(line[1].strip())
+                    elif line[0] == 'fedprox_active_frac':
+                        self.fedprox_active_frac = float(line[1].strip())
+                    elif line[0] == 'structure_k':
+                        self.structure_k = int(line[1].strip())
                 except Exception as e:
                     traceback.print_exc()
+        if self.real_world and 'realworld' not in self.dataset:
+            logger.error('\'real_world\' is valid only when dataset is set to \'realworld\', current dataset {}'.format(self.dataset))
+            self.real_world = False
     
     def log_config(self):
         configs = vars(self)

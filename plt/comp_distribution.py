@@ -18,12 +18,21 @@ if __name__ == "__main__":
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/10)
         data_1 = np.array(data)
+        max_no_trace = np.percentile(data_1,95)
+        var_no_trace = np.var(data_1)
+        median_no_trace = np.percentile(data_1, 50)
     with open('{}/reddit/clients_info_reddit_trace_5.cfg.json'.format(log_dir), 'r') as f:
         client2comp = json.load(f)
         data = []
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/10)
         data_2 = np.array(data)
+        max_trace = np.percentile(data_2,95)
+        var_trace = np.var(data_2)
+        median_trace = np.percentile(data_2, 50)
+        print('reddit max: ', max_no_trace, max_trace, max_trace/max_no_trace - 1)
+        print('reddit var: ', var_no_trace, var_trace, var_trace/var_no_trace - 1)
+        print('reddit median: ', median_no_trace, median_trace, 1-median_trace/median_no_trace)
         median = np.percentile(data_2, 50)
         acc = []
         inactive_acc = []
@@ -41,12 +50,21 @@ if __name__ == "__main__":
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/10)
         data_3 = np.array(data)
+        max_no_trace = np.percentile(data_3,95)
+        var_no_trace = np.var(data_3)
+        median_no_trace = np.percentile(data_3, 50)
     with open('{}/celeba/clients_info_celeba_trace_1.cfg.json'.format(log_dir), 'r') as f:
         client2comp = json.load(f)
         data = []
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/10)
         data_4 = np.array(data)
+        max_trace = np.percentile(data_4,95)
+        var_trace = np.var(data_4)
+        median_trace = np.percentile(data_4, 25)
+        print('celeba max: ', max_no_trace, max_trace, max_trace/max_no_trace - 1)
+        print('celeba var: ', var_no_trace, var_trace, var_trace/var_no_trace - 1)
+        print('celeba median: ', median_no_trace, median_trace, 1-median_trace/median_no_trace)
         median = np.percentile(data_4, 50)
         acc = []
         inactive_acc = []
@@ -64,13 +82,22 @@ if __name__ == "__main__":
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/1000)
         data_5 = np.array(data)
+        max_no_trace = np.percentile(data_5,95)
+        var_no_trace = np.var(data_5)
+        median_no_trace = np.percentile(data_5, 50)
     with open('{}/femnist/clients_info_femnist_trace_1.cfg.json'.format(log_dir), 'r') as f:
         client2comp = json.load(f)
         data = []
         for key in client2comp:
             data.append(int(client2comp[key]['comp'])/1000)
         data_6 = np.array(data)
-        median = np.percentile(data_6, 50)
+        max_trace = np.percentile(data_6,95)
+        var_trace = np.var(data_6)
+        median_trace = np.percentile(data_6, 50)
+        print('femnist max: ', max_no_trace, max_trace, max_trace/max_no_trace - 1)
+        print('femnist var: ', var_no_trace, var_trace, var_trace/var_no_trace - 1)
+        print('femnist median: ', median_no_trace, median_trace, 1-median_trace/median_no_trace)
+        median = np.percentile(data_6, 10)
         acc = []
         inactive_acc = []
         for key in client2comp:

@@ -7,26 +7,31 @@ import re
 from math import log
 import sys
 
+methods = ['nocomp', 'sign', 'structure_100', 'structure_1000', 'gdrop']
+method2label = {
+    'nocomp':'No Compression', 
+    'sign': 'SignSGD',
+    'structure_100': 'Structured Update, k=100', 
+    'structure_1000': 'Structured Update, k=1000',
+    'gdrop': 'GDrop'
+}
 
 Es = [1,5,20]
-colors = ['blue', 'green', 'orange']
-log_dir = '../exp_1_remake/'
-dataset = sys.argv[1]
-if dataset == 'femnist':
-    target_acc = 0.81
-elif dataset == 'reddit':
-    target_acc = 0.09
-elif dataset == 'celeba':
-    target_acc = 0.87
+colors = ['blue', 'green', 'orange', 'red', 'brown']
+log_dir = '../exp_3/'
+dataset = 'grad_compress'
+target_acc = 0.81
 
 if __name__ == "__main__":
     plt.figure()
     fig,ax1 = plt.subplots(figsize=(6.5, 4))
     cnt = 0
-    for E in Es:
+    for method in methods:
         convergence_t = -1
         convergence_t_no_trace = -1
-        with open('{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
+        final_acc_t = -1
+        final_acc_no_t = -1
+        with open('{}/{}/femnist_{}_trace_5.cfg.log'.format(log_dir,dataset,method), 'r') as f:
             x = []
             y = []
             
@@ -45,10 +50,11 @@ if __name__ == "__main__":
                         convergence_t = current_time
                     x.append(current_time/3600)
                     y.append(test_acc)
+                    final_acc_t = test_acc
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], linewidth=0.75)
-        with open('{}/{}/{}_no_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
+        plt.plot(x,y,color=colors[cnt], linewidth=1.5, label = method2label[method])
+        with open('{}/{}/femnist_{}_no_trace_5.cfg.log'.format(log_dir,dataset,method), 'r') as f:
             x = []
             y = []
             
@@ -67,14 +73,18 @@ if __name__ == "__main__":
                         convergence_t_no_trace = current_time
                     x.append(current_time/3600)
                     y.append(test_acc)
+                    final_acc_no_t = test_acc
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], ls=':')
+        plt.plot(x,y,color=colors[cnt], ls=':',linewidth=1.5,)
         cnt+=1
-        print('====={} {}====='.format(dataset, E))
+        print('====={}====='.format(method))
         print('convergence_t: ', convergence_t)
         print('convergence_t_no_trace: ', convergence_t_no_trace)
-        print(convergence_t/convergence_t_no_trace - 1)
+        print('final_acc_t: ',final_acc_t)
+        print('final_acc_no_t: ',final_acc_no_t)
+        print('acc drop: ', 1-final_acc_t/final_acc_no_t)
+        # print(convergence_t/convergence_t_no_trace - 1)
     
     plt.grid(axis='x',color='grey',ls='--')
     x_major_locator=MultipleLocator(12)
@@ -90,14 +100,9 @@ if __name__ == "__main__":
             'weight' : 'normal',
             'size'   : 28,
             }
-    plt.title('{} by time'.format(dataset), font_title)
+    # plt.title('', font_title)
     plt.xlabel('time line/h',font)
     plt.ylabel('accuracy',font)
-    plt.legend(["E = 1, with trace", 
-                "E = 5, with trace", 
-                "E = 20, with trace",
-                "E = 1, without trace", 
-                "E = 5, without trace", 
-                "E = 20, without trace"], fontsize=13)
+    plt.legend(fontsize=10)
     fig.subplots_adjust(bottom=0.15)
-    plt.savefig('{}_acc_by_time.png'.format(dataset))
+    plt.savefig('grad_compression.png')

@@ -6,18 +6,22 @@ import sys
 import tensorflow as tf
 
 from model import Model
+from fedprox import PerturbedGradientDescent
 from utils.model_utils import batch_data
 
 
 class ClientModel(Model):
 
-    def __init__(self, seed, lr, num_classes, input_dim):
+    def __init__(self, seed, lr, num_classes, input_dim, cffg=None):
         self.num_classes = num_classes
         self.input_dim = input_dim
 
         self.model_name = os.path.abspath(__file__)
         
-        super(ClientModel, self).__init__(seed, lr)
+        if cfg.fedprox:
+            super(ClientModel, self).__init__(seed, lr, optimizer=PerturbedGradientDescent(lr, cfg.fedprox_mu))
+        else:
+            super(ClientModel, self).__init__(seed, lr)
 
     def create_model(self):
         features = tf.placeholder(tf.float32, [None, self.input_dim])
