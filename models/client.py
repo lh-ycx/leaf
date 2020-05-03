@@ -224,7 +224,7 @@ class Client:
                     elif self.cfg.fedprox and ne != -1:
                         comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
                     else:
-                        failed_reason = 'failed when training'
+                        failed_reason = 'failed when uploading'
                         raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
                 else:
                     failed_reason = 'failed when uploading'
