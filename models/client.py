@@ -204,6 +204,7 @@ class Client:
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     elif self.cfg.fedprox and ne != -1:
                         comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                        train_time *= ne / num_epochs
                     else:
                         failed_reason = 'failed when training'
                         raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
@@ -223,6 +224,7 @@ class Client:
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     elif self.cfg.fedprox and ne != -1:
                         comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                        train_time *= ne / num_epochs
                     else:
                         failed_reason = 'failed when uploading'
                         raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
