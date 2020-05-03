@@ -144,6 +144,7 @@ class Server:
                     logger.error('comp: {}, flops: {}'.format(comp, self.client_model.flops))
                     assert False
                 self.clients_info[str(c.id)]["comp"] += norm_comp
+                # print('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
                 logger.debug('client {} upload successfully with acc {}, loss {}'.format(c.id,acc,loss))
             except timeout_decorator.timeout_decorator.TimeoutError as e:
                 # logger.debug('client {} failed: {}'.format(c.id, e))
