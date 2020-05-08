@@ -135,6 +135,7 @@ class Server:
 
                 if self.cfg.qffl:
                     q = self.cfg.qffl_q
+                    gradiant = [(-1) * grad for grad in gradiant]
                     self.deltas.append([np.float_power(loss_old + 1e-10, q) * grad for grad in gradiant])
                     self.hs.append(q * np.float_power(loss_old + 1e-10, (q - 1)) * norm_grad(gradiant) + (1.0 / self.client_model.lr) * np.float_power(loss_old + 1e-10, q))
                     print("client {} finish using qffl with q = {}".format(c.id, self.cfg.qffl_q))
