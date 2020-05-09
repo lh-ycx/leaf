@@ -110,6 +110,7 @@ class Server:
                 # training
                 logger.debug('client {} starts training...'.format(c.id))
                 start_t = self.get_cur_time()
+                # gradiant here is actually (-1) * grad
                 simulate_time_c, comp, num_samples, update, acc, loss, gradiant, update_size, seed, shape_old, loss_old = c.train(start_t, num_epochs, batch_size, minibatch)       
                 logger.debug('client {} simulate_time: {}'.format(c.id, simulate_time_c))
                 logger.debug('client {} num_samples: {}'.format(c.id, num_samples))
@@ -129,15 +130,16 @@ class Server:
                     if not self.structure_updater:
                         self.structure_updater = StructuredUpdate(self.cfg.structure_k, seed)
                     gradiant = self.structure_updater.regain_grad(shape_old, gradiant)
-                    print("client {} finish using structure_update with k = {}".format(c.id, self.cfg.structure_k))
+                    # print("client {} finish using structure_update with k = {}".format(c.id, self.cfg.structure_k))
                     
                 self.gradiants.append((c.id, num_samples, gradiant))
 
                 if self.cfg.qffl:
                     q = self.cfg.qffl_q
+                    # pos_gradiant = [-grad for grad in gradiant]
                     self.deltas.append([np.float_power(loss_old + 1e-10, q) * grad for grad in gradiant])
                     self.hs.append(q * np.float_power(loss_old + 1e-10, (q - 1)) * norm_grad(gradiant) + (1.0 / self.client_model.lr) * np.float_power(loss_old + 1e-10, q))
-                    print("client {} finish using qffl with q = {}".format(c.id, self.cfg.qffl_q))
+                    # print("client {} finish using qffl with q = {}".format(c.id, self.cfg.qffl_q))
                 
                 norm_comp = int(comp/self.client_model.flops)
                 if norm_comp == 0:
