@@ -193,25 +193,51 @@ class Client:
                 comp = self.model.get_comp(data, num_epochs, batch_size)
                 self.actual_comp = int(comp*available_time/train_time)    # will be used in get_actual_comp
                 self.update_size = 0
-                failed_reason = 'failed when training'
-                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-            elif (up_end_time-start_t) > self.deadline and self.cfg.no_training:
+                if self.cfg.fedprox:
+                    ne = -1
+                    for i in range(1, num_epochs):
+                        et = self.timer.get_future_time(down_end_time, train_time*ne/num_epochs + upload_time)
+                        if et - start_t <= self.deadline:
+                            ne = i
+                    if self.cfg.no_training:
+                        comp = self.model.get_comp(data, num_epochs, batch_size)
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
+                    elif self.cfg.fedprox and ne != -1:
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                        train_time *= ne / num_epochs
+                    else:
+                        failed_reason = 'failed when training'
+                        raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                else:
+                    failed_reason = 'failed when training'
+                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            elif (up_end_time-start_t) > self.deadline:
                 self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
-                failed_reason = 'failed when uploading'
-                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                if self.cfg.fedprox:
+                    ne = -1
+                    for i in range(1, num_epochs):
+                        et = self.timer.get_future_time(down_end_time, train_time*ne/num_epochs + upload_time)
+                        if et - start_t <= self.deadline:
+                            ne = i
+                    if self.cfg.no_training:
+                        comp = self.model.get_comp(data, num_epochs, batch_size)
+                        update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
+                    elif self.cfg.fedprox and ne != -1:
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, ne, batch_size)
+                        train_time *= ne / num_epochs
+                    else:
+                        failed_reason = 'failed when uploading'
+                        raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+                else:
+                    failed_reason = 'failed when uploading'
+                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
             else :
                 if minibatch is None:
                     if self.cfg.no_training:
                         comp = self.model.get_comp(data, num_epochs, batch_size)
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
-                        if self.cfg.fedprox:
-                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
-                            else:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
-                        else:
-                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
                 else:
                     # Minibatch trains for only 1 epoch - multiple local epochs don't make sense!
                     num_epochs = 1
@@ -219,52 +245,46 @@ class Client:
                         comp = self.model.get_comp(data, num_epochs, num_data)
                         update, acc, loss, grad, loss_old = -1,-1,-1,-1,-1
                     else:
-                        if self.cfg.fedprox: 
-                            if random.random() <= self.cfg.fedprox_active_frac or num_epochs == 1:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
-                            else:
-                                comp, update, acc, loss, grad, loss_old = self.model.train(data, random.randint(1, num_epochs-1), batch_size)
-                        else:
-                            comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
-                num_train_samples = len(data['y'])
-                simulate_time_c = train_time + upload_time
-                self.actual_comp = comp
+                        comp, update, acc, loss, grad, loss_old = self.model.train(data, num_epochs, batch_size)
+            num_train_samples = len(data['y'])
+            simulate_time_c = train_time + upload_time
+            self.actual_comp = comp
 
-                # gradiant compress and Federated Learning Strategies are mutually-exclusive
-                # gradiant compress
-                if self.compressor != None and not self.cfg.no_training:
-                    grad, size_old, size_new = self.compressor.GradientCompress(grad)
-                    # logger.info('compression ratio: {}'.format(size_new/size_old))
-                    self.update_size = self.update_size*size_new/size_old
-                    # re-calculate upload_time
-                    upload_time = self.device.get_upload_time(self.update_size)
-                    self.ori_upload_time = upload_time
-                    up_end_time = self.timer.get_future_time(train_end_time, upload_time)
-                    self.act_upload_time = up_end_time-train_end_time
+            # gradiant compress and Federated Learning Strategies are mutually-exclusive
+            # gradiant compress
+            if self.compressor != None and not self.cfg.no_training:
+                grad, size_old, size_new = self.compressor.GradientCompress(grad)
+                # logger.info('compression ratio: {}'.format(size_new/size_old))
+                self.update_size = self.update_size*size_new/size_old
+                # re-calculate upload_time
+                upload_time = self.device.get_upload_time(self.update_size)
+                self.ori_upload_time = upload_time
+                up_end_time = self.timer.get_future_time(train_end_time, upload_time)
+                self.act_upload_time = up_end_time-train_end_time
 
-                # Federated Learning Strategies for Improving Communication Efficiency
-                seed = None
-                shape_old = None
-                if self.structured_updater and not self.cfg.no_training:
-                    seed, shape_old, grad = self.structured_updater.struc_update(grad)
-                    # logger.info('compression ratio: {}'.format(sum([np.prod(g.shape) for g in grad]) / sum([np.prod(s) for s in shape_old])))
-                    self.update_size *= sum([np.prod(g.shape) for g in grad]) / sum([np.prod(s) for s in shape_old])
-                    # re-calculate upload_time
-                    upload_time = self.device.get_upload_time(self.update_size)
-                    self.ori_upload_time = upload_time
-                    up_end_time = self.timer.get_future_time(train_end_time, upload_time)
-                    self.act_upload_time = up_end_time-train_end_time
-                
-                total_cost = self.act_download_time + self.act_train_time + self.act_upload_time
-                if total_cost > self.deadline:
-                    # failed when uploading
-                    self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
-                    failed_reason = 'failed when uploading'
-                    # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
-                    raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
-                # if self.cfg.fedprox:
-                #     print("client {} finish train task".format(self.id))
-                return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old, loss_old
+            # Federated Learning Strategies for Improving Communication Efficiency
+            seed = None
+            shape_old = None
+            if self.structured_updater and not self.cfg.no_training:
+                seed, shape_old, grad = self.structured_updater.struc_update(grad)
+                # logger.info('compression ratio: {}'.format(sum([np.prod(g.shape) for g in grad]) / sum([np.prod(s) for s in shape_old])))
+                self.update_size *= sum([np.prod(g.shape) for g in grad]) / sum([np.prod(s) for s in shape_old])
+                # re-calculate upload_time
+                upload_time = self.device.get_upload_time(self.update_size)
+                self.ori_upload_time = upload_time
+                up_end_time = self.timer.get_future_time(train_end_time, upload_time)
+                self.act_upload_time = up_end_time-train_end_time
+            
+            total_cost = self.act_download_time + self.act_train_time + self.act_upload_time
+            if total_cost > self.deadline:
+                # failed when uploading
+                self.actual_comp = self.model.get_comp(data, num_epochs, batch_size)
+                failed_reason = 'failed when uploading'
+                # Note that, to simplify, we did not change the update_size here, actually the actual update size is less.
+                raise timeout_decorator.timeout_decorator.TimeoutError(failed_reason)
+            # if self.cfg.fedprox:
+            #     print("client {} finish train task".format(self.id))
+            return simulate_time_c, comp, num_train_samples, update, acc, loss, grad, self.update_size, seed, shape_old, loss_old
         '''
         # Deprecated
         @timeout_decorator.timeout(train_time_limit)
