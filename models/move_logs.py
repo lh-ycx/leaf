@@ -2,7 +2,7 @@ import os
 import sys
 
 dataset = sys.argv[1]
-target_dir = '../exp_3/grad_compress//'.format(dataset)
+target_dir = '../exp_2_remake/{}/'.format(dataset)
 print('target: {}'.format(target_dir))
 
 if not os.path.isdir(target_dir):

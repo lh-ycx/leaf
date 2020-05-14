@@ -17,7 +17,7 @@ method2label = {
 }
 
 Es = [1,5,20]
-colors = ['blue', 'green', 'orange', 'red', 'brown']
+colors = ['red', 'green', 'brown', 'orange', 'blue']
 log_dir = '../exp_3/'
 dataset = 'grad_compress'
 target_acc = 0.81
@@ -36,10 +36,13 @@ if __name__ == "__main__":
             y = []
             
             current_time = 0
+            current_round = 0
             hour = 0
             suc = 0
 
             for line in f:
+                if 'Round' in line:
+                    current_round = int(line.split()[9])
                 if 'current time:' in line:
                     floats = re.findall(r'\d+\.\d+',line)
                     current_time = float(floats[0])
@@ -48,21 +51,30 @@ if __name__ == "__main__":
                     test_acc = float(floats[0])
                     if convergence_t <= 0 and test_acc > target_acc:
                         convergence_t = current_time
+                    if current_round > 500:
+                        break
                     x.append(current_time/3600)
                     y.append(test_acc)
                     final_acc_t = test_acc
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], linewidth=1.5, label = method2label[method])
+        if method == 'nocomp':
+            lw = 2
+        else:
+            lw = 1.5
+        plt.plot(x,y,color=colors[cnt], linewidth=lw, label = method2label[method], alpha=0.7)
         with open('{}/{}/femnist_{}_no_trace_5.cfg.log'.format(log_dir,dataset,method), 'r') as f:
             x = []
             y = []
             
             current_time = 0
+            current_round = 0
             hour = 0
             suc = 0
 
             for line in f:
+                if 'Round' in line:
+                    current_round = int(line.split()[9])
                 if 'current time:' in line:
                     floats = re.findall(r'\d+\.\d+',line)
                     current_time = float(floats[0])
@@ -71,6 +83,8 @@ if __name__ == "__main__":
                     test_acc = float(floats[0])
                     if convergence_t_no_trace <= 0 and test_acc > target_acc:
                         convergence_t_no_trace = current_time
+                    if current_round > 500:
+                        break
                     x.append(current_time/3600)
                     y.append(test_acc)
                     final_acc_no_t = test_acc
@@ -103,6 +117,6 @@ if __name__ == "__main__":
     # plt.title('', font_title)
     plt.xlabel('time line/h',font)
     plt.ylabel('accuracy',font)
-    plt.legend(fontsize=10)
+    plt.legend(fontsize=12)
     fig.subplots_adjust(bottom=0.15)
     plt.savefig('grad_compression.png')

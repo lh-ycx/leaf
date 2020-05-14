@@ -81,7 +81,7 @@ class Client:
         if self.cfg.hard_hete:
             self.device.set_device_model(real_device_model)
         else:
-            self.device.set_device_model("Redmi Note8")
+            self.device.set_device_model("Xiaomi Redmi Note 7 Pro")
 
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
@@ -127,7 +127,7 @@ class Client:
             upload_time = self.device.get_upload_time(self.model.size) # will be re-calculated after training
             
             down_end_time = self.timer.get_future_time(start_t, download_time)
-            logger.debug("client {} download-time-need={}, download-time-cost={} end at {}, "
+            logger.info("client {} download-time-need={}, download-time-cost={} end at {}, "
                         .format(self.id, download_time, down_end_time-start_t, down_end_time))
 
             train_end_time = self.timer.get_future_time(down_end_time, train_time)

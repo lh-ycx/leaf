@@ -43,6 +43,7 @@ class Config():
         '''
         self.aggregate_algorithm = 'FedAvg'
         self.time_window = [20.0, 0.0]  # time window for selection stage
+        self.user_trace = False
         self.behav_hete = False
         self.hard_hete = False
         self.no_training = False
@@ -138,11 +139,17 @@ class Config():
                         self.qffl = line[1].strip()=='True'
                     elif line[0] == 'qffl_q':
                         self.qffl_q = float(line[1].strip())
+                    elif line[0] == 'user_trace':
+                        # to be compatibale with old version
+                        self.user_trace = line[1].strip()=='True'
                 except Exception as e:
                     traceback.print_exc()
         if self.real_world and 'realworld' not in self.dataset:
             logger.error('\'real_world\' is valid only when dataset is set to \'realworld\', current dataset {}'.format(self.dataset))
             self.real_world = False
+        if self.user_trace == True:
+            self.hard_hete = True
+            self.behav_hete = True
     
     def log_config(self):
         configs = vars(self)

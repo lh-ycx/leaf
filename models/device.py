@@ -30,7 +30,7 @@ class Device():
         self.cfg = cfg
         
         self.model_size = model_size / 1024 # change to kb because speed data use 'kb/s'
-        if cfg.behav_hete == False:
+        if cfg.behav_hete == False and cfg.hard_hete == False:
             # make sure the no_trace mode perform the same as original leaf
             self.model_size = 0
         if Device.speed_distri == None:
@@ -41,7 +41,12 @@ class Device():
             self.download_speed_u = 1.0
             self.download_speed_sigma = 0.0
         else:
-            guid = random.sample(list(Device.speed_distri.keys()), 1)[0]
+            if cfg.hard_hete == False:
+                # assign a fixed speed distribution
+                guid = list(Device.speed_distri.keys())[cfg.seed%len(Device.speed_distri)]
+                # logger.info(guid)
+            else:
+                guid = random.sample(list(Device.speed_distri.keys()), 1)[0]
             self.download_speed_u = Device.speed_distri[guid]['down_u']
             self.download_speed_sigma = Device.speed_distri[guid]['down_sigma']
             self.upload_speed_u = Device.speed_distri[guid]['up_u']
@@ -57,7 +62,7 @@ class Device():
     
     
     def get_upload_time(self, model_size):
-        if self.model_size == 0.0 or not self.cfg.hard_hete:
+        if self.model_size == 0.0 :
             return 0.0
 
         upload_speed = np.random.normal(self.upload_speed_u, self.upload_speed_sigma)
@@ -67,7 +72,7 @@ class Device():
         return float(upload_time)
 
     def get_download_time(self):
-        if self.model_size == 0.0 or not self.cfg.hard_hete:            
+        if self.model_size == 0.0:            
             return 0.0
         
         download_speed = np.random.normal(self.download_speed_u, self.download_speed_sigma)

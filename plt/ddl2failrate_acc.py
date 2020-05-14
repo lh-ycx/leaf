@@ -17,10 +17,15 @@ if __name__ == "__main__":
             ddls = [60,70,80,90,100,120,150]
             log_dir = '../exp_2_remake/celeba_ddl/'
             target_acc = 0.88
+        if dataset == 'reddit':
+            ddls = [70,80,90,100,110,120]
+            log_dir = '../exp_2_remake/reddit_ddl/'
+            target_acc = 0.24
+
         plt.figure()
         fig,ax1 = plt.subplots()
         ax1.set_xlabel('Deadline (sec)',fontsize=20)
-        ax1.set_ylabel('Round Failure Rate',fontsize=19)
+        ax1.set_ylabel('Accuracy',fontsize=19)
         ax2 = ax1.twinx()
         ax2.set_ylabel('Convergence Time (sec)',fontsize=19)
         # x = np.array(list(map(log, ddls)))
@@ -39,6 +44,7 @@ if __name__ == "__main__":
                 suc = 0
                 fail = 0
                 convergence_flag = False
+                max_acc = 0
                 for line in f:
                     if 'round succeed' in line:
                         suc+=1
@@ -50,29 +56,37 @@ if __name__ == "__main__":
                     if 'test_accuracy' in line:
                         floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                         test_acc = float(floats[0])
-                        if dataset == 'reddit':
+                        if dataset == 'reddit' :
                             test_acc = float(floats[5])
-                        if test_acc > target_acc:
+                        if test_acc > target_acc and not convergence_flag:
                             print(ddl, current_time)
                             x2.append(ddl)
                             y2.append(current_time)
                             convergence_flag = True
                             y_max = max(current_time,y_max)
                             y_min = min(current_time,y_min)
-                            break
-                y.append(fail/(fail+suc))
+                        max_acc = max(test_acc, max_acc)
+                y.append(max_acc)
                 if convergence_flag == False:
                     x2.append(ddl)
-                    y2.append(200000)
+                    if dataset == 'reddit':
+                        y2.append(80000)
+                    if dataset == 'femnist':
+                        y2.append(200000)
+                    if dataset == 'celeba':
+                        y2.append(200000)
+                    
         y = np.array(y)
         print('x:{}'.format(x))
         print('y:{}'.format(y))
-        l_1 = ax1.plot(x,y,'o-',color='brown',label='Round Failure Rate')
+        l_1 = ax1.plot(x,y,'o-',color='red',label='Accuracy')
         l_2 = ax2.plot(x2,y2,'X-',color='blue', label='Convergence Time')
-        ax2.axis([None,None,y_min*0.99,y_max*1.01])
+        ax2.axis([None,None,y_min*0.98,y_max*1.02])
         ls = l_1 + l_2
         labels = [l.get_label() for l in ls]
         ax1.legend(ls, labels,fontsize=18)
+        if dataset == 'reddit':
+            ax1.axis([None,None,0,0.25])
         fig.subplots_adjust(right=0.85)
         plt.title(dataset,fontsize=25)
-        plt.savefig('ddl2failrate_{}.png'.format(dataset))
+        plt.savefig('ddl2failrate_acc_{}.png'.format(dataset))

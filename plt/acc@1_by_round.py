@@ -19,7 +19,11 @@ if __name__ == "__main__":
     real_acc = [0.0] * 3
     ideal_acc = [0.0] * 3
     for E in Es:
-        with open('{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
+        if dataset == 'realworld_co':
+            file = '{}/{}/{}_{}_trace.cfg.log'.format(log_dir,dataset,dataset,E)
+        else:
+            file = '{}/{}/{}_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E)
+        with open(file, 'r') as f:
             x = []
             y = []
             
@@ -40,13 +44,17 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt],linewidth=0.75)
+        plt.plot(x,y,color=colors[cnt],lw=1.5,label='E={}, heterogeneity-aware'.format(E))
         real_acc[cnt] = test_acc
         cnt+=1
         
     cnt = 0
     for E in Es:
-        with open('{}/{}/{}_no_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E), 'r') as f:
+        if dataset == 'realworld_co':
+            file = '{}/{}/{}_{}_no_trace.cfg.log'.format(log_dir,dataset,dataset,E)
+        else:
+            file = '{}/{}/{}_no_trace_{}.cfg.log'.format(log_dir,dataset,dataset,E)
+        with open(file, 'r') as f:
             x = []
             y = []
             
@@ -68,12 +76,12 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], ls='--')
+        plt.plot(x,y,color=colors[cnt], ls='--',lw=1.5, label='E={}, heterogeneity-unaware'.format(E))
         ideal_acc[cnt] = test_acc
         cnt+=1
 
     for i in range(3):
-        print((ideal_acc[i] - real_acc[i]) / ideal_acc[i])
+        print('acc drops by:', (ideal_acc[i] - real_acc[i]) / ideal_acc[i])
 
 
     # plt.grid(axis='x',color='grey',ls='--')
@@ -90,14 +98,12 @@ if __name__ == "__main__":
             'weight' : 'normal',
             'size'   : 28,
             }
-    plt.title('{} by round'.format(dataset), font_title)
+    if dataset == 'realworld_co':
+        plt.title('M-Type by round'.format(dataset), font_title)
+    else:
+        plt.title('{} by round'.format(dataset), font_title)
     plt.xlabel('round num', font)
     plt.ylabel('accuracy', font)
-    plt.legend(["E = 1, with trace", 
-                "E = 5, with trace", 
-                "E = 20, with trace",
-                "E = 1, without trace", 
-                "E = 5, without trace", 
-                "E = 20, without trace"], fontsize=13)
+    plt.legend(fontsize=13)
     fig.subplots_adjust(bottom=0.15)
     plt.savefig('{}_acc_by_round.png'.format(dataset))

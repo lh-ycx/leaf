@@ -14,13 +14,13 @@ if __name__ == "__main__":
             log_dir = '../exp_2_remake/femnist_ddl/'
             target_acc = 0.81
         else:
-            ddls = [40,50,60,70,80,90]
-            log_dir = '../exp_2/reddit/'
-            target_acc = 0.1
+            ddls = [70,80,90,100,110,120,130]
+            log_dir = '../exp_2_remake/reddit_ddl/'
+            target_acc = 0.11
         
         plt.figure()
         fig,ax1 = plt.subplots()
-        ax1.set_xlabel('ddl/s',fontsize=20)
+        ax1.set_xlabel('Deadline (sec)',fontsize=20)
         ax1.set_ylabel('Round Failure Rate',fontsize=20)
         ax2 = ax1.twinx()
         ax2.set_ylabel('Average Reporting Fraction',fontsize=20)

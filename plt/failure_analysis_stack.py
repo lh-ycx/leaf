@@ -8,9 +8,10 @@ from collections import defaultdict
 import re
 import csv
 
+datasets = ['femnist', 'reddit']
 delta = 5
-log_dir = '../exp_2_remake/femnist_ddl/'
-failure_reasons = ['network', 'training', 'interrupt']
+log_dir = '../exp_2_remake/'
+failure_reasons = ['network', 'training', 'interruption']
 colors = ['blue', 'green', 'orange']
 avg_d_t = 0
 avg_u_t = 0
@@ -22,15 +23,24 @@ std_t_t = 0
 
 def check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t,ddl,avg_d_t,avg_u_t):
     if (ori_d_t+ori_t_t+ori_u_t) <= ddl and (act_d_t+act_t_t+act_u_t) > ddl:
-        return 'interrupt'
-    if (ori_d_t+ori_u_t) > 3*(avg_d_t+avg_u_t):
+        return 'interruption'
+    if (ori_d_t+ori_u_t) > 5*(avg_d_t+avg_u_t):
         return 'network'
     else:
         return 'training'
 
 
-def main(E):
-    f = open('{}femnist_ddl_5_310_sys.csv'.format(log_dir), 'r')
+def main(dataset):
+    print(dataset)
+    if dataset == 'femnist':
+        E = 5
+        f = open('{}/femnist_ddl/femnist_ddl_5_310_sys.csv'.format(log_dir), 'r')
+        ddls = [230, 250, 270, 290, 310, 330]
+        target = 310
+    elif dataset == 'reddit' :
+        f = open('{}/reddit_ddl/reddit_ddl_110_sys.csv'.format(log_dir), 'r')
+        ddls = [70,80,90,100,110,120,130]
+        target = 90
     data = csv.DictReader(f)
     d_ts, u_ts, t_ts = [], [], []
     for row in data:
@@ -55,15 +65,13 @@ def main(E):
     
     plt.figure()
     fig,ax1 = plt.subplots()
-    if E == 5:
-        ddls = [230, 250, 270, 290, 310, 330]
-        target = 310
-    elif E == 1:
-        ddls = [40,50,60,70,80,90,100]
-        target = 80
+        
     for ddl in ddls:
         f.close()
-        f = open('{}femnist_ddl_{}_{}_sys.csv'.format(log_dir,E, ddl), 'r')
+        if dataset == 'femnist':
+            f = open('{}/{}_ddl/{}_ddl_5_{}_sys.csv'.format(log_dir,dataset,dataset,ddl), 'r')
+        if dataset == 'reddit' :
+            f = open('{}/{}_ddl/{}_ddl_{}_sys.csv'.format(log_dir,dataset,dataset,ddl), 'r')
         data = csv.DictReader(f)
         # x = []
         # x_time = []
@@ -96,38 +104,21 @@ def main(E):
             if (act_d_t+act_t_t+act_u_t) > ddl:
                 reason = check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t,ddl,avg_d_t,avg_u_t)
                 failure_cnt[reason] += 1
-        
-        '''
-        x.append(cur_round)
-        cur_time += round_time
-        x_time.append(cur_time)
-        for reason in failure_reasons:
-            y[reason].append(failure_cnt[reason]/delta)
-        plt.figure()
-        for cnt in range(len(failure_reasons)):
-            plt.plot(x,y[failure_reasons[cnt]], c=colors[cnt])
-        font = {
-                'weight' : 'normal',
-                'size'   : 15,
-                }
-        plt.xlabel('round num',font)
-        plt.ylabel('failure num')
-        plt.legend(failure_reasons)
-        plt.savefig('failure_analysis.png')
-        '''
 
 
         
-        if E == 5:
+        if dataset == 'femnist':
+            width = 10
+        elif dataset == 'reddit':
             width = 5
-        elif E == 1:
-            width = 2.5
         ls = []
+        bottom = 0
         for cnt in range(len(failure_reasons)):
-            l = plt.bar((ddl-(1-cnt)*width), height=np.mean(y[failure_reasons[cnt]]), width=width, color=colors[cnt], label=failure_reasons[cnt])
+            l = plt.bar(ddl, height=np.mean(y[failure_reasons[cnt]]), width=width, bottom=bottom, color=colors[cnt], label=failure_reasons[cnt])
             ls.append(l)
+            bottom+=np.mean(y[failure_reasons[cnt]])
     l1 = ax1.axvline(x=target,ls="--",c="red", label="ddl corresonping to the shortest convergence time")
-    ls.append(l1)
+    # ls.append(l1)
     font = {
             'weight' : 'normal',
             'size'   : 20,
@@ -137,19 +128,19 @@ def main(E):
     # ax=plt.gca()
     # ax为两条坐标轴的实例
     # ax.xaxis.set_major_locator(x_major_locator)
-    plt.xlabel('ddl/s',font)
+    plt.xlabel('Deadline (sec)',font)
     plt.xticks(ddls)
     plt.ylabel('% of failure clients',font)
-    plt.title('Femnist (E = {})'.format(E), fontsize=25)
+    plt.title('{}'.format(dataset), fontsize=25)
     # texts = []
     # for ddl in ddls:
     #     texts += [reason+'_{}'.format(ddl) for reason in failure_reasons]
     plt.legend(ls, [_ for _ in failure_reasons] + ["deadline that reaches the\nshortest convergence time"],fontsize=15)
     # plt.legend([l1], ["ddl corresonping to the shortest convergence time"])
     # plt.legend()
-    plt.savefig('failure_analysis_{}.png'.format(E))
+    plt.savefig('failure_analysis_{}.png'.format(dataset))
     
 
 if __name__ == "__main__":
-    main(1)
-    main(5)
+    for dataset in datasets:
+        main(dataset)

@@ -7,10 +7,13 @@ import re
 from math import log
 import sys
 
-nations = ['br', 'co', 'id']
+nations = ['co']
+prefix2label = {'ideal': 'hete-unaware', 
+                'olaf': 'hete-aware, decoupled',
+                'real': 'hete-aware, coupled'}
 prefixs = ['ideal', 'olaf', 'real']
 colors = ['blue', 'green', 'orange']
-log_dir = '../models/'
+log_dir = '../exp_1_remake/realword/'
 
 if __name__ == "__main__":
     for nation in nations:
@@ -50,12 +53,10 @@ if __name__ == "__main__":
                 }
         plt.xlabel('round num', font)
         plt.ylabel('accuracy', font)
-        plt.legend(["no trace", 
-                    "randomly sample", 
-                    "exactly match"], fontsize=18)
+        plt.legend([prefix2label[pre] for pre in prefixs], fontsize=18)
         font = {
                 'weight' : 'normal',
                 'size'   : 30,
                 }
-        plt.title(nation, font)
-        plt.savefig('realworld_{}_acc_by_round.png'.format(nation))
+        plt.title('M-Type', font)
+        plt.savefig('validity of decoupling.png')

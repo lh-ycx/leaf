@@ -80,7 +80,7 @@ class Model(ABC):
     def update_with_gradiant(self, gradients):
         params = self.get_params()
         for i in range(len(gradients)):
-            params[i] += gradients[i]*self.lr
+            params[i] -= gradients[i]*self.lr
         self.set_params(params)
         return params
 
@@ -140,7 +140,7 @@ class Model(ABC):
 
         grad = []
         for i in range(len(update)):
-            grad.append((update[i]-params_old[i])/self.lr)
+            grad.append((params_old[i] - update[i]) / self.lr)
         return comp, update, acc, loss, grad, loss_old
 
     def run_epoch(self, data, batch_size):
