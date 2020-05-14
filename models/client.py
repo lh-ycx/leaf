@@ -127,7 +127,7 @@ class Client:
             upload_time = self.device.get_upload_time(self.model.size) # will be re-calculated after training
             
             down_end_time = self.timer.get_future_time(start_t, download_time)
-            logger.info("client {} download-time-need={}, download-time-cost={} end at {}, "
+            logger.debug("client {} download-time-need={}, download-time-cost={} end at {}, "
                         .format(self.id, download_time, down_end_time-start_t, down_end_time))
 
             train_end_time = self.timer.get_future_time(down_end_time, train_time)
