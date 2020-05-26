@@ -13,7 +13,7 @@ from collections import defaultdict
 
 colors = ['green', 'orange', 'blue', 'brown']
 log_dir = '../exp_1_remake/hete/'
-datasets = ['realworld_co']
+datasets = ['realworld_co','femnist']
 prefixs = ['unaware','hard','behav','aware']
 
 def check_failure_reason(ori_d_t,ori_t_t,ori_u_t,act_d_t,act_t_t,act_u_t,ddl,avg_d_t,avg_u_t):
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         if dataset == 'femnist':
             target_acc = 0.81
         elif dataset == 'reddit' or dataset == 'realworld_co':
-            target_acc = 0.1
+            target_acc = 0.09
         elif dataset == 'celeba':
             target_acc = 0.87
         
@@ -47,6 +47,7 @@ if __name__ == "__main__":
                 current_time = 0
                 hour = 0
                 suc = 0
+                convergence_t = -1
 
                 for line in f:
                     if 'current time:' in line:
@@ -55,17 +56,18 @@ if __name__ == "__main__":
                     if 'test_accuracy' in line:
                         floats = re.findall(r'\d+\.\d*e*-*\d*',line)
                         test_acc = float(floats[0])
-                        # if convergence_t <= 0 and test_acc > target_acc:
-                            # convergence_t = current_time
+                        if convergence_t <= 0 and test_acc > target_acc:
+                            convergence_t = current_time
                         x.append(current_time/3600)
                         y.append(test_acc)
             x = np.array(x)
             y = np.array(y)
-            plt.plot(x,y,color=colors[cnt], lw=1.5,label='heterogeneity-{}'.format(prefix))
+            plt.plot(x,y,color=colors[cnt], lw=2.5,label='heterogeneity-{}'.format(prefix))
+            print('{}, hete-{}, acc: {}; convergence time: {}'.format(dataset, prefix, test_acc, convergence_t))
             cnt+=1
         
         plt.grid(axis='x',color='grey',ls='--')
-        x_major_locator=MultipleLocator(12)
+        x_major_locator=MultipleLocator(6)
         ax=plt.gca()
         # ax为两条坐标轴的实例
         ax.xaxis.set_major_locator(x_major_locator)
@@ -78,6 +80,7 @@ if __name__ == "__main__":
                 'weight' : 'normal',
                 'size'   : 28,
                 }
+        '''
         if dataset == 'realworld_co':
             plt.title('M-Type', font_title)
         else:
@@ -85,10 +88,14 @@ if __name__ == "__main__":
         plt.xlabel('time line/h',font)
         plt.ylabel('accuracy',font)
         plt.legend(fontsize=13)
+        '''
         if dataset == 'realworld_co':
-            plt.xlim([0,25])
-        fig.subplots_adjust(bottom=0.15)
-        plt.savefig('hete_acc_{}'.format(dataset))
+            plt.xlim([0,19])
+        if dataset == 'femnist' :
+            plt.xlim([0,13])
+        plt.tick_params(labelsize=16)
+        # fig.subplots_adjust(bottom=0.15)
+        plt.savefig('hete_acc_{}.pdf'.format(dataset))
     
 
     # participation bias
@@ -99,7 +106,10 @@ if __name__ == "__main__":
                 client2comp = json.load(f)
                 data = []
                 for key in client2comp:
-                    data.append(int(client2comp[key]['comp'])/10)
+                    if dataset == 'femnist':
+                        data.append(int(client2comp[key]['comp'])/100)
+                    else:
+                        data.append(int(client2comp[key]['comp'])/10)
                 data.sort()
                 datas.append(data)
                 length = len(data)
@@ -107,30 +117,35 @@ if __name__ == "__main__":
         
         fig, ax = plt.subplots()
         bplot = ax.boxplot(datas, patch_artist = True, notch=True, showfliers=False)
-        # print(bplot)
-        # colors = ['pink', 'pink', 'lightblue', 'lightblue', 'lightgreen', 'lightgreen', 'orange', 'orange']
-        # for patch, color in zip(bplot['boxes'], colors):
-            # patch.set_fc(color)
+        for patch, color in zip(bplot['boxes'], colors):
+            patch.set_fc('gray')
         font = {
             'weight' : 'normal',
             'size'   : 15,
             }
-        ax.set_xticklabels(["hete-{}".format(_) for _ in prefixs],font)
+        # ax.set_xticklabels(["hete-{}".format(_) for _ in prefixs],font)
+        ax.set_xticklabels(['' for _ in prefixs],font)
+        plt.tick_params(labelsize=16)
         # plt.hist(data, bins=100, normed=0, facecolor="blue", alpha=0.7)
         font = {
             'weight' : 'normal',
             'size'   : 26,
             }
+        '''
         if dataset == 'realworld_co':
             plt.title('M-Type',font)
         else:
             plt.title(dataset,font)
+        '''
         # plt.xlabel('settings')
         # plt.ylabel('number of clients')
         
-        plt.ylabel('relative computation',fontsize=22)
-        # fig.subplots_adjust(bottom=0.15)
-        plt.savefig('hete_comp_{}.png'.format(dataset))
+        # plt.ylabel('relative computation',fontsize=22)
+        # plt.xticks(rotation=30)
+        # fig.subplots_adjust(bottom=0.25)
+        # if dataset == 'femnist':
+        #     fig.subplots_adjust(left=0.15)
+        plt.savefig('hete_comp_{}.pdf'.format(dataset))
 
 
     # acc cdf
@@ -156,9 +171,10 @@ if __name__ == "__main__":
                     x.append(data[i])
                     y.append((i+1)/count)
                 median = np.percentile(x,50)
-                plt.plot(x,y,lw=1.5,color=colors[cnt],label='Hete-{}'.format(prefix))
+                plt.plot(x,y,lw=2.5,color=colors[cnt],label='Hete-{}'.format(prefix))
                 cnt+=1
                 print('{}, hete-{}: median_acc={}'.format(dataset, prefix, median))
+        '''
         plt.xlabel('Accuracy', fontsize=20)
         plt.legend(fontsize=20)
         if dataset == 'realworld_co':
@@ -166,13 +182,15 @@ if __name__ == "__main__":
         else:
             plt.title(dataset, fontsize=25)    
         plt.ylabel('CDF', fontsize=20)
+        '''
         # fig.subplots_adjust(bottom=0.3)
         if dataset == 'reddit' or dataset == 'realworld_co':
-            plt.xlim([0,0.2])
+            plt.xlim([0.02,0.17])
         else:
-            plt.xlim([0.2,1.1])
-        fig.subplots_adjust(bottom=0.15)
-        plt.savefig('hete_acc_cdf_{}.png'.format(dataset))
+            plt.xlim([0.4,1.01])
+        plt.tick_params(labelsize=16)
+        # fig.subplots_adjust(bottom=0.15)
+        plt.savefig('hete_acc_cdf_{}.pdf'.format(dataset))
 
 
 
@@ -252,10 +270,12 @@ if __name__ == "__main__":
             width = 10
             ls = []
             bottom = 0
+            colors = ['white', 'gray', 'black']
             for cnt in range(len(failure_reasons)):
-                l = plt.bar(bar_num*width, height=np.mean(y[failure_reasons[cnt]]), width=0.6*width, bottom=bottom, color=colors[cnt], label=failure_reasons[cnt])
+                l = plt.bar(bar_num*width, height=np.mean(y[failure_reasons[cnt]]), width=0.6*width, bottom=bottom, facecolor=colors[cnt], label=failure_reasons[cnt], edgecolor='black')
                 ls.append(l)
                 bottom+=np.mean(y[failure_reasons[cnt]])
+            plt.text(bar_num*width, bottom+0.05,'{:.1f}'.format(bottom),ha='center', va= 'bottom',fontsize=15)
         font = {
                 'weight' : 'normal',
                 'size'   : 20,
@@ -265,18 +285,26 @@ if __name__ == "__main__":
         # ax=plt.gca()
         # ax为两条坐标轴的实例
         # ax.xaxis.set_major_locator(x_major_locator)
-        plt.xlabel('',font)
+        # plt.xlabel('',font)
         ax1.set_xticks([(cnt+1)*width for cnt in range(len(prefixs))])
-        ax1.set_xticklabels(['hete-{}'.format(prefix) for prefix in prefixs])
+        # ax1.set_xticklabels(['hete-{}'.format(prefix) for prefix in prefixs])
+        ax1.set_xticklabels(['' for prefix in prefixs])
+        '''
         plt.ylabel('% of failure clients',font)
         if dataset == 'realworld_co':
             plt.title('M-Type', fontsize=25)
         else:
-            plt.title(dataset, fontsize=25) 
+            plt.title(dataset, fontsize=25)
+        ''' 
         # texts = []
         # for ddl in ddls:
         #     texts += [reason+'_{}'.format(ddl) for reason in failure_reasons]
-        plt.legend(ls, [_ for _ in failure_reasons])
+        # plt.legend(ls, [_ for _ in failure_reasons])
         # plt.legend([l1], ["ddl corresonping to the shortest convergence time"])
         # plt.legend()
-        plt.savefig('hete_failure_{}.png'.format(dataset))
+        plt.tick_params(labelsize=16)
+        if dataset == 'femnist':
+            plt.ylim([0,9])
+        else:
+            plt.ylim([0,17.5])
+        plt.savefig('hete_failure_{}.pdf'.format(dataset))

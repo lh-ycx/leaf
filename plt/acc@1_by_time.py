@@ -51,7 +51,7 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], lw=1.5,label='E={}, heterogeneity-aware'.format(E))
+        plt.plot(x,y,color=colors[cnt], lw=2.5,label='E={}, heterogeneity-aware'.format(E))
         cnt+=1
     cnt = 0
     for E in Es:
@@ -80,7 +80,7 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], ls=':', lw=1.5,label='E={}, heterogeneity-unaware'.format(E))
+        plt.plot(x,y,color=colors[cnt], ls=':', lw=2.5,label='E={}, heterogeneity-unaware'.format(E))
         cnt+=1
     
     
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     print(convergence_t/convergence_t_no_trace - 1)'''
     
     plt.grid(axis='x',color='grey',ls='--')
-    x_major_locator=MultipleLocator(12)
+    x_major_locator=MultipleLocator(6)
     ax=plt.gca()
     # ax为两条坐标轴的实例
     ax.xaxis.set_major_locator(x_major_locator)
@@ -103,14 +103,23 @@ if __name__ == "__main__":
             'weight' : 'normal',
             'size'   : 28,
             }
+    '''
     if dataset == 'realworld_co':
         plt.title('M-Type by time'.format(dataset), font_title)
     else:
         plt.title('{} by time'.format(dataset), font_title)
-    plt.xlabel('time line/h',font)
-    plt.ylabel('accuracy',font)
-    plt.legend(fontsize=13)
+    '''
+    # plt.xlabel('Time Line (Hours)',font)
+    # plt.ylabel('Accuracy',font)
+    # plt.legend(fontsize=13)
     if dataset == 'realworld_co':
+        plt.xlim([0,14])
+    if dataset == 'femnist':
         plt.xlim([0,25])
-    fig.subplots_adjust(bottom=0.15)
-    plt.savefig('{}_acc_by_time.png'.format(dataset))
+    if dataset == 'celeba':
+        plt.xlim([0,25])
+    if dataset == 'reddit':
+        plt.xlim([0,25])
+    # fig.subplots_adjust(bottom=0.15)
+    plt.tick_params(labelsize=16)
+    plt.savefig('acc_{}_by_time.pdf'.format(dataset))

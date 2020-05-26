@@ -9,7 +9,7 @@ import sys
 
 
 fractions = [0.1,0.2,0.4,0.8]
-paras = [100,200,400]
+paras = [100,200,400,800]
 targets = [40,80,160]
 colors = ['blue', 'green', 'orange']
 log_dir = '../exp_2_remake/fraction_abs/'
@@ -25,9 +25,12 @@ if __name__ == "__main__":
     for target in targets:
         cnt = 0
         plt.figure()
+        fig,ax1 = plt.subplots()
         for para in paras:
             for fraction in fractions:
                 if target != para*fraction:
+                    continue
+                if para == 800 and fraction != 0.2:
                     continue
                 print("target: {}, fraction: {}, para: {}".format(target, fraction, para))
                 convergence_t = -1
@@ -51,18 +54,19 @@ if __name__ == "__main__":
                             if convergence_t <= 0 and test_acc > target_acc:
                                 convergence_t = current_time
                                 convergence_r = current_round
-                            x.append(current_round)
+                            x.append(current_time/3600)
                             y.append(test_acc)
                 x = np.array(x)
                 y = np.array(y)
                 plt.plot(x,y,color=colors[cnt], linewidth=2, label = 'fraction={}, para={}'.format(fraction, para))
                 cnt+=1
                 print('convergence_r: {}, convergence_t: {}, final_acc: {}'.format(convergence_r,convergence_t,test_acc))
-        # plt.grid(axis='x',color='grey',ls='--')
-        # x_major_locator=MultipleLocator(12)
-        # ax=plt.gca()
+        
+        plt.grid(axis='x',color='grey',ls='--')
+        x_major_locator=MultipleLocator(12)
+        ax=plt.gca()
         # ax为两条坐标轴的实例
-        # ax.xaxis.set_major_locator(x_major_locator)
+        ax.xaxis.set_major_locator(x_major_locator)
 
         font = {
                 'weight' : 'normal',
@@ -76,5 +80,6 @@ if __name__ == "__main__":
         plt.xlabel('round num',font)
         plt.ylabel('accuracy',font)
         plt.legend(fontsize=15)
-        # fig.subplots_adjust(bottom=0.15)
+        fig.subplots_adjust(bottom=0.15)
+        plt.xlim([0,13])
         plt.savefig('fraction_abs_{}.png'.format(target))

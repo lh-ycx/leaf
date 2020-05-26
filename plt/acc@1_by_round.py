@@ -44,7 +44,7 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt],lw=1.5,label='E={}, heterogeneity-aware'.format(E))
+        plt.plot(x,y,color=colors[cnt],lw=2.5,label='E={}, heterogeneity-aware'.format(E))
         real_acc[cnt] = test_acc
         cnt+=1
         
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                     y.append(test_acc)
         x = np.array(x)
         y = np.array(y)
-        plt.plot(x,y,color=colors[cnt], ls='--',lw=1.5, label='E={}, heterogeneity-unaware'.format(E))
+        plt.plot(x,y,color=colors[cnt], ls='--',lw=2.5, label='E={}, heterogeneity-unaware'.format(E))
         ideal_acc[cnt] = test_acc
         cnt+=1
 
@@ -98,12 +98,19 @@ if __name__ == "__main__":
             'weight' : 'normal',
             'size'   : 28,
             }
+    # if dataset == 'realworld_co':
+    #     plt.title('M-Type by round'.format(dataset), font_title)
+    # else:
+    #     plt.title('{} by round'.format(dataset), font_title)
+    # plt.xlabel('Round Num', font)
+    # plt.ylabel('Accuracy', font)
+    if dataset == 'femnist':
+        plt.xlim([0,320])
+    if dataset == 'celeba' :
+        plt.xlim([0,320])
     if dataset == 'realworld_co':
-        plt.title('M-Type by round'.format(dataset), font_title)
-    else:
-        plt.title('{} by round'.format(dataset), font_title)
-    plt.xlabel('round num', font)
-    plt.ylabel('accuracy', font)
-    plt.legend(fontsize=13)
-    fig.subplots_adjust(bottom=0.15)
-    plt.savefig('{}_acc_by_round.png'.format(dataset))
+        plt.xlim([0,500])
+    # plt.legend(fontsize=13)
+    # fig.subplots_adjust(bottom=0.15)
+    plt.tick_params(labelsize=16)
+    plt.savefig('acc_{}_by_round.pdf'.format(dataset))

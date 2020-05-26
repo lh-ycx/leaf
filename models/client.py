@@ -81,7 +81,7 @@ class Client:
         if self.cfg.hard_hete:
             self.device.set_device_model(real_device_model)
         else:
-            self.device.set_device_model("Xiaomi Redmi Note 7 Pro")
+            self.device.set_device_model("Redmi Note 8")
 
 
     def train(self, start_t=None, num_epochs=1, batch_size=10, minibatch=None):
